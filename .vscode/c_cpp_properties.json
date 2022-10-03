@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include/project-polaris/**",
-                "/opt/homebrew/Cellar/**"
+                "/opt/homebrew/Cellar/**",
+                "${workspaceFolder}/include/project-polaris"
             ],
             "defines": [],
             "macFrameworkPath": [],

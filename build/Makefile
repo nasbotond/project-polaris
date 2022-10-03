@@ -129,6 +129,30 @@ filter/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/build
 .PHONY : filter/fast
 
+src/comp_filter.o: src/comp_filter.cpp.o
+.PHONY : src/comp_filter.o
+
+# target to build an object file
+src/comp_filter.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/src/comp_filter.cpp.o
+.PHONY : src/comp_filter.cpp.o
+
+src/comp_filter.i: src/comp_filter.cpp.i
+.PHONY : src/comp_filter.i
+
+# target to preprocess a source file
+src/comp_filter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/src/comp_filter.cpp.i
+.PHONY : src/comp_filter.cpp.i
+
+src/comp_filter.s: src/comp_filter.cpp.s
+.PHONY : src/comp_filter.s
+
+# target to generate assembly for a file
+src/comp_filter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/src/comp_filter.cpp.s
+.PHONY : src/comp_filter.cpp.s
+
 src/madgwick_filter.o: src/madgwick_filter.cpp.o
 .PHONY : src/madgwick_filter.o
 
@@ -186,6 +210,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... filter"
+	@echo "... src/comp_filter.o"
+	@echo "... src/comp_filter.i"
+	@echo "... src/comp_filter.s"
 	@echo "... src/madgwick_filter.o"
 	@echo "... src/madgwick_filter.i"
 	@echo "... src/madgwick_filter.s"

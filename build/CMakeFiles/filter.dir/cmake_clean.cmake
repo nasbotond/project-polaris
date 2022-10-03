@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/filter.dir/src/comp_filter.cpp.o"
+  "CMakeFiles/filter.dir/src/comp_filter.cpp.o.d"
   "CMakeFiles/filter.dir/src/madgwick_filter.cpp.o"
   "CMakeFiles/filter.dir/src/madgwick_filter.cpp.o.d"
   "CMakeFiles/filter.dir/src/main.cpp.o"

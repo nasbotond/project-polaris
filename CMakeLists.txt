@@ -17,5 +17,5 @@ find_package ( OpenCV REQUIRED )
 include_directories ( ${OpenCV_INCLUDE_DIRS} )
 include_directories ( ${filters} )
 
-add_executable ( filter ${source_dir}/main.cpp ${source_dir}/madgwick_filter.cpp )
+add_executable ( filter ${source_dir}/main.cpp ${source_dir}/madgwick_filter.cpp ${source_dir}/comp_filter.cpp)
 target_link_libraries ( filter ${OpenCV_LIBS} )
