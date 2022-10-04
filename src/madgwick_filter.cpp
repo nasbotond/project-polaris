@@ -144,10 +144,10 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
     b_x = sqrt((h_x * h_x) + (h_y * h_y));
     b_z = h_z;
 
-    std::cout << "q1: " << q_1 << std::endl;
-    std::cout << "q2: " << q_2 << std::endl;
-    std::cout << "q3: " << q_3 << std::endl;
-    std::cout << "q4: " << q_4 << std::endl;
+    // std::cout << "q1: " << q_1 << std::endl;
+    // std::cout << "q2: " << q_2 << std::endl;
+    // std::cout << "q3: " << q_3 << std::endl;
+    // std::cout << "q4: " << q_4 << std::endl;
 }
 
 void MadgwickFilter::updateIMUFilter(float w_x, float w_y, float w_z, float a_x, float a_y, float a_z)
@@ -212,9 +212,9 @@ void MadgwickFilter::updateIMUFilter(float w_x, float w_y, float w_z, float a_x,
     q_3 /= norm;
     q_4 /= norm;
 
-    std::cout << "q1 IMU: " << q_1 << std::endl;
-    std::cout << "q2: " << q_2 << std::endl;
-    std::cout << "q3: " << q_3 << std::endl;
-    std::cout << "q4: " << q_4 << std::endl;
+    // std::cout << "q1 IMU: " << q_1 << std::endl;
+    // std::cout << "q2: " << q_2 << std::endl;
+    // std::cout << "q3: " << q_3 << std::endl;
+    // std::cout << "q4: " << q_4 << std::endl;
 
 }
