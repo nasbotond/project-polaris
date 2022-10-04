@@ -17,7 +17,7 @@ void ComplementaryFilter::updateFilter(float w_x, float w_y, float w_z, float a_
 
     float b_x = m_x*cos(theta) + m_y*sin(theta)*sin(phi) + m_z*sin(theta)*cos(phi);
     float b_y = m_y*cos(phi) - m_z*sin(phi);
-    float b_z = -m_x*sin(phi) + m_y*cos(theta)*sin(phi) + m_z*cos(theta)*cos(phi);
+    float b_z = -m_x*sin(theta) + m_y*cos(theta)*sin(phi) + m_z*cos(theta)*cos(phi);
     
     float epsilon = atan2(-b_y, b_x);
 

@@ -8,12 +8,12 @@
 void CsvReader::retrieveFileItems()
 {
     std::fstream afile("../test_data/imu_acc.csv", std::ios::in);
-    std::string line;
+    std::string aline;
     if (afile.is_open())
     {
-        while (getline(afile, line))
+        while (getline(afile, aline))
         {
-            this->a.push_back(split(line, ','));
+            this->a.push_back(split(aline, ','));
         }
     }
     else
@@ -22,12 +22,12 @@ void CsvReader::retrieveFileItems()
     }
 
     std::fstream wfile("../test_data/imu_gyr.csv", std::ios::in);
-
+    std::string gline;
     if (wfile.is_open())
     {
-        while (getline(wfile, line))
+        while (getline(wfile, gline))
         {
-            this->w.push_back(split(line, ','));
+            this->w.push_back(split(gline, ','));
         }
     }
     else
@@ -36,12 +36,12 @@ void CsvReader::retrieveFileItems()
     }
 
     std::fstream mfile("../test_data/imu_mag.csv", std::ios::in);
-    // std::string line;
+    std::string mline;
     if (mfile.is_open())
     {
-        while (getline(mfile, line))
+        while (getline(mfile, mline))
         {
-            this->m.push_back(split(line, ','));
+            this->m.push_back(split(mline, ','));
         }
     }
     else
@@ -50,7 +50,7 @@ void CsvReader::retrieveFileItems()
     }
 
     std::fstream file("../test_data/opt_quat.csv", std::ios::in);
-    // std::string line;
+    std::string line;
     if (file.is_open())
     {
         while (getline(file, line))

@@ -45,49 +45,50 @@ int main(int argc, char* argv[])
     {
         read.retrieveFileItems();
 
-        for (int i = 0 ; i < read.a.size(); ++i)
-        // for (int i = 0 ; i < 100; ++i)
-        {
-            comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
-            madg.updateMARGFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
-        }
-        // comp.updateFilter(-0.0011, -0.0043, 0.0053, -0.2362, -0.3632, 9.9193, 0.2226, 15.8218, -38.3379);
-        // madg.updateMARGFilter(-0.0011, -0.0043, 0.0053, -0.2362, -0.3632, 9.9193, 0.0, 0.0 ,0.0);
+        // for (int i = 932; i < 120000; ++i)
+        // for (int i = 932; i < 5000; ++i)
+        // {
+        //     comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
+        //     madg.updateMARGFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
+        // }
+        int i = 1500;
+        comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
+        madg.updateMARGFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
         float cyaw = atan2(2*comp.q_2*comp.q_3-2*comp.q_1*comp.q_4, 2*comp.q_1 *comp.q_1+2*comp.q_2*comp.q_2-1);
         float croll = -asin(2*comp.q_2*comp.q_4+2*comp.q_1*comp.q_3);
         float cpitch = atan2(2*comp.q_3*comp.q_4-2*comp.q_1*comp.q_2, 2*comp.q_1*comp.q_1 + 2*comp.q_4*comp.q_4-1);
         std::cout << "COMP" << std::endl;
-        std::cout << "y: " << cyaw << std::endl;
-        std::cout << "p: " << croll << std::endl;
-        std::cout << "r: " << cpitch << std::endl;
-        // std::cout << "q1: " << comp.q_1 << std::endl;
-        // std::cout << "q2: " << comp.q_2 << std::endl;
-        // std::cout << "q3: " << comp.q_3 << std::endl;
-        // std::cout << "q4: " << comp.q_4 << std::endl;
+        std::cout << "y: " << cyaw*(180/M_PI) << std::endl;
+        std::cout << "p: " << croll*(180/M_PI) << std::endl;
+        std::cout << "r: " << cpitch*(180/M_PI) << std::endl;
+        std::cout << "q1: " << comp.q_1 << std::endl;
+        std::cout << "q2: " << comp.q_2 << std::endl;
+        std::cout << "q3: " << comp.q_3 << std::endl;
+        std::cout << "q4: " << comp.q_4 << std::endl;
 
         float myaw = atan2(2*madg.q_2*madg.q_3-2*madg.q_1*madg.q_4, 2*madg.q_1 *madg.q_1+2*madg.q_2*madg.q_2-1);
         float mroll = -asin(2*madg.q_2*madg.q_4+2*madg.q_1*madg.q_3);
         float mpitch = atan2(2*madg.q_3*madg.q_4-2*madg.q_1*madg.q_2, 2*madg.q_1*madg.q_1 + 2*madg.q_4*madg.q_4-1);
         std::cout << "MADG" << std::endl;
-        std::cout << "y: " << myaw << std::endl;
-        std::cout << "p: " << mroll << std::endl;
-        std::cout << "r: " << mpitch << std::endl;
-        // std::cout << "q1: " << madg.q_1 << std::endl;
-        // std::cout << "q2: " << madg.q_2 << std::endl;
-        // std::cout << "q3: " << madg.q_3 << std::endl;
-        // std::cout << "q4: " << madg.q_4 << std::endl;
+        std::cout << "y: " << myaw*(180/M_PI) << std::endl;
+        std::cout << "p: " << mroll*(180/M_PI) << std::endl;
+        std::cout << "r: " << mpitch*(180/M_PI) << std::endl;
+        std::cout << "q1: " << madg.q_1 << std::endl;
+        std::cout << "q2: " << madg.q_2 << std::endl;
+        std::cout << "q3: " << madg.q_3 << std::endl;
+        std::cout << "q4: " << madg.q_4 << std::endl;
 
-        float gyaw = atan2(2*read.gt.back().at(1)*read.gt.back().at(2)-2*read.gt.back().at(0)*read.gt.back().at(3), 2*read.gt.back().at(0) *read.gt.back().at(0)+2*read.gt.back().at(1)*read.gt.back().at(1)-1);
-        float groll = -asin(2*read.gt.back().at(1)*read.gt.back().at(3)+2*read.gt.back().at(0)*read.gt.back().at(2));
-        float gpitch = atan2(2*read.gt.back().at(2)*read.gt.back().at(3)-2*read.gt.back().at(0)*read.gt.back().at(1), 2*read.gt.back().at(0)*read.gt.back().at(0) + 2*read.gt.back().at(3)*read.gt.back().at(3)-1);
+        float gyaw = atan2(2*read.gt.at(i).at(1)*read.gt.at(i).at(2)-2*read.gt.at(i).at(0)*read.gt.at(i).at(3), 2*read.gt.at(i).at(0) *read.gt.at(i).at(0)+2*read.gt.at(i).at(1)*read.gt.at(i).at(1)-1);
+        float groll = -asin(2*read.gt.at(i).at(1)*read.gt.at(i).at(3)+2*read.gt.at(i).at(0)*read.gt.at(i).at(2));
+        float gpitch = atan2(2*read.gt.at(i).at(2)*read.gt.at(i).at(3)-2*read.gt.at(i).at(0)*read.gt.at(i).at(1), 2*read.gt.at(i).at(0)*read.gt.at(i).at(0) + 2*read.gt.at(i).at(3)*read.gt.at(i).at(3)-1);
         std::cout << "GT" << std::endl;
-        std::cout << "y: " << gyaw << std::endl;
-        std::cout << "p: " << groll << std::endl;
-        std::cout << "r: " << gpitch << std::endl;
-        // std::cout << "q1: " << read.gt.back().at(0) << std::endl;
-        // std::cout << "q2: " << read.gt.back().at(1) << std::endl;
-        // std::cout << "q3: " << read.gt.back().at(2) << std::endl;
-        // std::cout << "q4: " << read.gt.back().at(3) << std::endl;
+        std::cout << "y: " << gyaw*(180/M_PI) << std::endl;
+        std::cout << "p: " << groll*(180/M_PI) << std::endl;
+        std::cout << "r: " << gpitch*(180/M_PI) << std::endl;
+        std::cout << "q1: " << read.gt.at(i).at(0) << std::endl;
+        std::cout << "q2: " << read.gt.at(i).at(1) << std::endl;
+        std::cout << "q3: " << read.gt.at(i).at(2) << std::endl;
+        std::cout << "q4: " << read.gt.at(i).at(3) << std::endl;
     } 
     catch(const std::exception &e) 
     {

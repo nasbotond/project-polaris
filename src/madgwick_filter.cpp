@@ -7,7 +7,7 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
     float qDot_omega_1, qDot_omega_2, qDot_omega_3, qDot_omega_4; 
     float f_1, f_2, f_3, f_4, f_5, f_6;
     float J_11or24, J_12or23, J_13or22, J_41, J_42, J_43, J_44, J_51, J_52, J_14or21, J_32, J_33, J_53, J_54, J_61, J_62, J_63, J_64;
-    float qHatDot_1 = 0, qHatDot_2 = 0, qHatDot_3 = 0, qHatDot_4 = 0;
+    float qHatDot_1, qHatDot_2, qHatDot_3, qHatDot_4;
     float w_err_x, w_err_y, w_err_z;
     float h_x, h_y, h_z;
 
@@ -17,15 +17,15 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
         return;
     }
 
-    float halfq_1 = 0.5f * q_1; 
-    float halfq_2 = 0.5f * q_2; 
-    float halfq_3 = 0.5f * q_3; 
-    float halfq_4 = 0.5f * q_4; 
-    float twoq_1 = 2.0f * q_1; 
+    float halfq_1 = 0.5f * q_1;
+    float halfq_2 = 0.5f * q_2;
+    float halfq_3 = 0.5f * q_3;
+    float halfq_4 = 0.5f * q_4;
+    float twoq_1 = 2.0f * q_1;
     float twoq_2 = 2.0f * q_2;
-    float twoq_3 = 2.0f * q_3; 
-    float twoq_4 = 2.0f * q_4; 
-    float twob_x = 2.0f * b_x; 
+    float twoq_3 = 2.0f * q_3;
+    float twoq_4 = 2.0f * q_4;
+    float twob_x = 2.0f * b_x;
     float twob_z = 2.0f * b_z;
     float twob_xq_1 = 2.0f * b_x * q_1;
     float twob_xq_2 = 2.0f * b_x * q_2;
@@ -36,20 +36,14 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
     float twob_zq_3 = 2.0f * b_z * q_3;
     float twob_zq_4 = 2.0f * b_z * q_4;
     float q_1q_2;
-    float q_1q_3 = q_1 * q_3; 
+    float q_1q_3 = q_1 * q_3;
     float q_1q_4;
     float q_2q_3;
-    float q_2q_4 = q_2 * q_4; 
+    float q_2q_4 = q_2 * q_4;
     float q_3q_4;
     float twom_x = 2.0f * m_x;
     float twom_y = 2.0f * m_y;
-    float twom_z = 2.0f * m_z;    
-
-    // compute the quaternion rate measured by gyroscopes
-    qDot_omega_1 = -halfq_2 * w_x - halfq_3 * w_y - halfq_4 * w_z; 
-    qDot_omega_2 = halfq_1 * w_x + halfq_3 * w_z - halfq_4 * w_y; 
-    qDot_omega_3 = halfq_1 * w_y - halfq_2 * w_z + halfq_4 * w_x; 
-    qDot_omega_4 = halfq_1 * w_z + halfq_2 * w_y - halfq_3 * w_x;
+    float twom_z = 2.0f * m_z;
 
     if(!((a_x == 0.0f) && (a_y == 0.0f) && (a_z == 0.0f))) 
     {
@@ -99,7 +93,7 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
         norm = sqrt(qHatDot_1 * qHatDot_1 + qHatDot_2 * qHatDot_2 + qHatDot_3 * qHatDot_3 + qHatDot_4 * qHatDot_4);
         qHatDot_1 = qHatDot_1 / norm;
         qHatDot_2 = qHatDot_2 / norm;
-        qHatDot_3 = qHatDot_3 / norm; 
+        qHatDot_3 = qHatDot_3 / norm;
         qHatDot_4 = qHatDot_4 / norm;
 
         // compute angular estimated direction of the gyroscope error
@@ -107,13 +101,19 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
         w_err_y = twoq_1 * qHatDot_3 + twoq_2 * qHatDot_4 - twoq_3 * qHatDot_1 - twoq_4 * qHatDot_2; 
         w_err_z = twoq_1 * qHatDot_4 - twoq_2 * qHatDot_3 + twoq_3 * qHatDot_2 - twoq_4 * qHatDot_1;
 
-        // compute and remove the gyroscope baises
+        // compute and remove the gyroscope biases
         w_by += w_err_y * deltat * zeta;
         w_bz += w_err_z * deltat * zeta;
         w_x -= w_bx;
         w_y -= w_by;
         w_z -= w_bz;
     }
+
+    // compute the quaternion rate measured by gyroscopes
+    qDot_omega_1 = -halfq_2 * w_x - halfq_3 * w_y - halfq_4 * w_z;
+    qDot_omega_2 = halfq_1 * w_x + halfq_3 * w_z - halfq_4 * w_y;
+    qDot_omega_3 = halfq_1 * w_y - halfq_2 * w_z + halfq_4 * w_x;
+    qDot_omega_4 = halfq_1 * w_z + halfq_2 * w_y - halfq_3 * w_x;
 
     // compute then integrate the estimated quaternion rate
     q_1 += (qDot_omega_1 - (beta * qHatDot_1)) * deltat;

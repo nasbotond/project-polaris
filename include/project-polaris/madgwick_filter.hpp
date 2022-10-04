@@ -18,10 +18,12 @@
 #define PI 3.14159265
 
 #define deltat 0.0035f
-#define gyroMeasError 3.14159265358979 * (5.0/180.0)
-#define gyroMeasDrift 3.14159265358979 * (0.2/180.0)
-#define beta sqrt(3.0/4.0) * gyroMeasError
-#define zeta sqrt(3.0/4.0) * gyroMeasDrift
+// #define gyroMeasError 3.14159265358979 * (5.0/180.0)
+// #define gyroMeasDrift 3.14159265358979 * (0.2/180.0)
+// #define beta sqrt(3.0/4.0) * gyroMeasError
+// #define zeta sqrt(3.0/4.0) * gyroMeasDrift
+#define beta 0.12
+#define zeta 0.0
 
 class MadgwickFilter
 {
