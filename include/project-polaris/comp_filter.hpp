@@ -13,7 +13,7 @@
 
 #define deltat 0.0035f
 #define gyroMeasError 3.14159265358979 * (5.0/180.0)
-#define gain 0.01 //sqrt(3.0/4.0) * gyroMeasError
+#define gain 0.02 //sqrt(3.0/4.0) * gyroMeasError
 
 class ComplementaryFilter
 {
@@ -25,9 +25,8 @@ class ComplementaryFilter
         // std::string outputFileName;
 
     public:
-
-        // ComplementaryFilter(const std::string &sPath, const int &sFps, const int &sWidth, const int &sHeight, const std::string &outputFileName) : sPath(sPath), sFps(sFps), sWidth(sWidth), sHeight(sHeight), outputFileName(outputFileName) {}
-        ComplementaryFilter() : q_1(1.0f), q_2(0.0f), q_3(0.0f), q_4(0.0f) {}
+        // ComplementaryFilter() : q_1(1.0f), q_2(0.0f), q_3(0.0f), q_4(0.0f) {}
+        ComplementaryFilter() : q_1(0.99886), q_2(0.0072345), q_3(-0.00048461), q_4(-0.04713) {}
         ~ComplementaryFilter() {}
 
         // Main functions

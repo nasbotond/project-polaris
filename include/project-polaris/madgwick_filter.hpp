@@ -22,7 +22,7 @@
 // #define gyroMeasDrift 3.14159265358979 * (0.2/180.0)
 // #define beta sqrt(3.0/4.0) * gyroMeasError
 // #define zeta sqrt(3.0/4.0) * gyroMeasDrift
-#define beta 0.12
+#define beta 0.15
 #define zeta 0.0
 
 class MadgwickFilter
@@ -37,7 +37,8 @@ class MadgwickFilter
     public:
 
         // MadgwickFilter(const std::string &sPath, const int &sFps, const int &sWidth, const int &sHeight, const std::string &outputFileName) : sPath(sPath), sFps(sFps), sWidth(sWidth), sHeight(sHeight), outputFileName(outputFileName) {}
-        MadgwickFilter() : q_1(1.0f), q_2(0.0f), q_3(0.0f), q_4(0.0f) {}
+        // MadgwickFilter() : q_1(1.0f), q_2(0.0f), q_3(0.0f), q_4(0.0f) {}
+        MadgwickFilter() : q_1(0.99886), q_2(0.0072345), q_3(-0.00048461), q_4(-0.04713) {}
         ~MadgwickFilter() {}
 
         // Main functions

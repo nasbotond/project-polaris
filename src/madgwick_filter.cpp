@@ -4,18 +4,43 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
 {
     // local system variables
     float norm;
-    float qDot_omega_1, qDot_omega_2, qDot_omega_3, qDot_omega_4; 
+    float qDot_omega_1, qDot_omega_2, qDot_omega_3, qDot_omega_4;
     float f_1, f_2, f_3, f_4, f_5, f_6;
     float J_11or24, J_12or23, J_13or22, J_41, J_42, J_43, J_44, J_51, J_52, J_14or21, J_32, J_33, J_53, J_54, J_61, J_62, J_63, J_64;
-    float qHatDot_1, qHatDot_2, qHatDot_3, qHatDot_4;
+    float qHatDot_1 = 0, qHatDot_2 = 0, qHatDot_3 = 0, qHatDot_4 = 0;
     float w_err_x, w_err_y, w_err_z;
     float h_x, h_y, h_z;
 
-    if((m_x == 0.0f) && (m_y == 0.0f) && (m_z == 0.0f)) 
+    if((m_x == 0.0f) && (m_y == 0.0f) && (m_z == 0.0f))
     {
         updateIMUFilter(w_x, w_y, w_z, a_x, a_y, a_z);
         return;
     }
+    float q_1q_2;
+    float q_1q_3 = q_1 * q_3;
+    float q_1q_4;
+    float q_2q_3;
+    float q_2q_4 = q_2 * q_4;
+    float q_3q_4;
+    float twom_x = 2.0f * m_x;
+    float twom_y = 2.0f * m_y;
+    float twom_z = 2.0f * m_z;
+
+    // compute flux in the earth frame
+    q_1q_2 = q_1 * q_2;
+    q_1q_3 = q_1 * q_3;
+    q_1q_4 = q_1 * q_4;
+    q_3q_4 = q_3 * q_4;
+    q_2q_3 = q_2 * q_3;
+    q_2q_4 = q_2 * q_4;
+
+    h_x = twom_x * (0.5f - q_3 * q_3 - q_4 * q_4) + twom_y * (q_2q_3 - q_1q_4) + twom_z * (q_2q_4 + q_1q_3);
+    h_y = twom_x * (q_2q_3 + q_1q_4) + twom_y * (0.5f - q_2 * q_2 - q_4 * q_4) + twom_z * (q_3q_4 - q_1q_2);
+    h_z = twom_x * (q_2q_4 - q_1q_3) + twom_y * (q_3q_4 + q_1q_2) + twom_z * (0.5f - q_2 * q_2 - q_3 * q_3);
+
+    // normalise the flux vector to have only components in the x and z
+    b_x = sqrt((h_x * h_x) + (h_y * h_y));
+    b_z = h_z;
 
     float halfq_1 = 0.5f * q_1;
     float halfq_2 = 0.5f * q_2;
@@ -35,15 +60,6 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
     float twob_zq_2 = 2.0f * b_z * q_2;
     float twob_zq_3 = 2.0f * b_z * q_3;
     float twob_zq_4 = 2.0f * b_z * q_4;
-    float q_1q_2;
-    float q_1q_3 = q_1 * q_3;
-    float q_1q_4;
-    float q_2q_3;
-    float q_2q_4 = q_2 * q_4;
-    float q_3q_4;
-    float twom_x = 2.0f * m_x;
-    float twom_y = 2.0f * m_y;
-    float twom_z = 2.0f * m_z;
 
     if(!((a_x == 0.0f) && (a_y == 0.0f) && (a_z == 0.0f))) 
     {
@@ -91,17 +107,18 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
 
         // normalise the gradient to estimate direction of the gyroscope error
         norm = sqrt(qHatDot_1 * qHatDot_1 + qHatDot_2 * qHatDot_2 + qHatDot_3 * qHatDot_3 + qHatDot_4 * qHatDot_4);
-        qHatDot_1 = qHatDot_1 / norm;
-        qHatDot_2 = qHatDot_2 / norm;
-        qHatDot_3 = qHatDot_3 / norm;
-        qHatDot_4 = qHatDot_4 / norm;
+        qHatDot_1 /= norm;
+        qHatDot_2 /= norm;
+        qHatDot_3 /= norm;
+        qHatDot_4 /= norm;
 
         // compute angular estimated direction of the gyroscope error
-        w_err_x = twoq_1 * qHatDot_2 - twoq_2 * qHatDot_1 - twoq_3 * qHatDot_4 + twoq_4 * qHatDot_3; 
-        w_err_y = twoq_1 * qHatDot_3 + twoq_2 * qHatDot_4 - twoq_3 * qHatDot_1 - twoq_4 * qHatDot_2; 
+        w_err_x = twoq_1 * qHatDot_2 - twoq_2 * qHatDot_1 - twoq_3 * qHatDot_4 + twoq_4 * qHatDot_3;
+        w_err_y = twoq_1 * qHatDot_3 + twoq_2 * qHatDot_4 - twoq_3 * qHatDot_1 - twoq_4 * qHatDot_2;
         w_err_z = twoq_1 * qHatDot_4 - twoq_2 * qHatDot_3 + twoq_3 * qHatDot_2 - twoq_4 * qHatDot_1;
 
         // compute and remove the gyroscope biases
+        w_bx += w_err_x * deltat * zeta;
         w_by += w_err_y * deltat * zeta;
         w_bz += w_err_z * deltat * zeta;
         w_x -= w_bx;
@@ -128,22 +145,6 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
     q_3 /= norm;
     q_4 /= norm;
 
-    // compute flux in the earth frame
-    q_1q_2 = q_1 * q_2;
-    q_1q_3 = q_1 * q_3;
-    q_1q_4 = q_1 * q_4;
-    q_3q_4 = q_3 * q_4;
-    q_2q_3 = q_2 * q_3;
-    q_2q_4 = q_2 * q_4;
-
-    h_x = twom_x * (0.5f - q_3 * q_3 - q_4 * q_4) + twom_y * (q_2q_3 - q_1q_4) + twom_z * (q_2q_4 + q_1q_3);
-    h_y = twom_x * (q_2q_3 + q_1q_4) + twom_y * (0.5f - q_2 * q_2 - q_4 * q_4) + twom_z * (q_3q_4 - q_1q_2);
-    h_z = twom_x * (q_2q_4 - q_1q_3) + twom_y * (q_3q_4 + q_1q_2) + twom_z * (0.5f - q_2 * q_2 - q_3 * q_3);
-
-    // normalise the flux vector to have only components in the x and z
-    b_x = sqrt((h_x * h_x) + (h_y * h_y));
-    b_z = h_z;
-
     // std::cout << "q1: " << q_1 << std::endl;
     // std::cout << "q2: " << q_2 << std::endl;
     // std::cout << "q3: " << q_3 << std::endl;
@@ -153,7 +154,7 @@ void MadgwickFilter::updateMARGFilter(float w_x, float w_y, float w_z, float a_x
 void MadgwickFilter::updateIMUFilter(float w_x, float w_y, float w_z, float a_x, float a_y, float a_z)
 {
     float norm;
-    float qDot_omega_1, qDot_omega_2, qDot_omega_3, qDot_omega_4; 
+    float qDot_omega_1, qDot_omega_2, qDot_omega_3, qDot_omega_4;
     float f_1, f_2, f_3;
     float J_11or24, J_12or23, J_13or22, J_14or21, J_32, J_33;
 
@@ -166,11 +167,6 @@ void MadgwickFilter::updateIMUFilter(float w_x, float w_y, float w_z, float a_x,
     float twoq_1 = 2.0f * q_1;
     float twoq_2 = 2.0f * q_2;
     float twoq_3 = 2.0f * q_3;
-
-    qDot_omega_1 = -halfq_2 * w_x - halfq_3 * w_y - halfq_4 * w_z;
-    qDot_omega_2 = halfq_1 * w_x + halfq_3 * w_z - halfq_4 * w_y;
-    qDot_omega_3 = halfq_1 * w_y - halfq_2 * w_z + halfq_4 * w_x; 
-    qDot_omega_4 = halfq_1 * w_z + halfq_2 * w_y - halfq_3 * w_x;
 
     if(!((a_x == 0.0f) && (a_y == 0.0f) && (a_z == 0.0f))) 
     {
@@ -199,7 +195,12 @@ void MadgwickFilter::updateIMUFilter(float w_x, float w_y, float w_z, float a_x,
         qHatDot_2 /= norm;
         qHatDot_3 /= norm;
         qHatDot_4 /= norm;
-    }    
+    }
+
+    qDot_omega_1 = -halfq_2 * w_x - halfq_3 * w_y - halfq_4 * w_z;
+    qDot_omega_2 = halfq_1 * w_x + halfq_3 * w_z - halfq_4 * w_y;
+    qDot_omega_3 = halfq_1 * w_y - halfq_2 * w_z + halfq_4 * w_x; 
+    qDot_omega_4 = halfq_1 * w_z + halfq_2 * w_y - halfq_3 * w_x;
 
     q_1 += (qDot_omega_1 - (beta * qHatDot_1)) * deltat;
     q_2 += (qDot_omega_2 - (beta * qHatDot_2)) * deltat;
