@@ -6,6 +6,8 @@
 #include <vtkActor.h>
 #include <vtkAxesActor.h>
 #include <vtkArrowSource.h>
+#include <vtkCamera.h>
+#include <vtkPlaneSource.h>
 #include <vtkMath.h>
 #include <vtkMinimalStandardRandomSequence.h>
 #include <vtkNamedColors.h>
@@ -133,13 +135,15 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    // VISUALIZATION
+
     vtkNew<vtkNamedColors> colors;
 
-    // Set the background color.
+    // Set the background color
     std::array<unsigned char, 4> bkg{{26, 51, 77, 255}};
     colors->SetColor("BkgColor", bkg.data());
 
-    // Create an arrow.
+    // Create an arrow
     vtkNew<vtkArrowSource> arrowSource;
     arrowSource->SetShaftRadius(0.01);
     arrowSource->SetTipRadius(0.05);
@@ -147,7 +151,7 @@ int main(int argc, char* argv[])
 
     // Generate a random start and end point
     double startPoint[3] = {0, 0, 0};;
-    double endPoint[3] = {0, 0, 1};
+    double endPoint[3] = {0.0, 0.0, 1.0};
     vtkNew<vtkMinimalStandardRandomSequence> rng;
 
     // Compute a basis
@@ -225,30 +229,58 @@ int main(int argc, char* argv[])
     // The axes are positioned with a user transform
     axes->SetUserTransform(transformA);
 
+    // PLANE
+    // Create a plane
+    vtkNew<vtkPlaneSource> planeSource;
+    planeSource->SetOrigin(0.0, 0.0, 0.0);
+    planeSource->SetPoint1(0.5, 0.0, 0.0);
+    planeSource->SetPoint2(0.0, 0.25, 0.0);
+    planeSource->SetCenter(0.0, 0.0, 0.0);
+    planeSource->SetNormal(endPoint[0], endPoint[1], endPoint[2]);    
+    planeSource->Update();
+
+    vtkPolyData* plane = planeSource->GetOutput();
+
+    // Create a mapper and actor
+    vtkNew<vtkPolyDataMapper> planeMapper;
+    planeMapper->SetInputData(plane);
+
+    vtkNew<vtkActor> planeActor;
+    planeActor->SetMapper(planeMapper);
+    planeActor->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());
+
     // Create a renderer, render window, and interactor
     vtkNew<vtkRenderer> renderer;
     vtkNew<vtkRenderWindow> renderWindow;
     renderWindow->AddRenderer(renderer);
     renderWindow->SetWindowName("Gravity Vector");
     renderWindow->SetSize(600, 600);
+
     vtkNew<vtkRenderWindowInteractor> renderWindowInteractor;
     renderWindowInteractor->SetRenderWindow(renderWindow);
 
     // Add the actor to the scene
+    renderer->AddActor(planeActor);
     renderer->AddActor(axes);
     renderer->AddActor(actor);
     renderer->AddActor(sphereStart);
     renderer->AddActor(sphereEnd);
     renderer->SetBackground(colors->GetColor3d("BkgColor").GetData());
 
-    // renderer->GetActiveCamera()->Azimuth(50);
-    // renderer->GetActiveCamera()->Elevation(-30);
+    renderer->GetActiveCamera()->SetPosition(-1, 0, 0);
+    renderer->GetActiveCamera()->SetFocalPoint(0, 0, 1.0);
+    renderer->GetActiveCamera()->SetViewUp(0, 0, -1);
 
-    // Render and interact
+    // // Render and interact
+    // renderWindow->Render();
+    // renderWindowInteractor->Start();
+    renderer->ResetCamera();
+    renderWindow->SetWindowName("Axes");
     renderWindow->Render();
+ 
+    // begin mouse interaction
     renderWindowInteractor->Start();
 
     return EXIT_SUCCESS;
-
     // return 0;
 }
