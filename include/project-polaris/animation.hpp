@@ -46,7 +46,7 @@ public:
   int tick = 0;
 
   void StartCue(vtkAnimationCue::AnimationCueInfo* vtkNotUsed(info),
-                vtkRenderer* ren)
+                vtkRenderer* ren, vtkRenderWindowInteractor* inter)
   {
     // std::cout << "*** IN StartCue " << std::endl;
 
@@ -149,6 +149,8 @@ public:
     // Render and interact
     ren->ResetCamera();
     ren->Render();
+    inter->Initialize();
+    inter->Start();
   }
 
   void Tick(vtkAnimationCue::AnimationCueInfo* info, vtkRenderer* ren)
@@ -284,7 +286,7 @@ public:
       switch (event)
       {
       case vtkCommand::StartAnimationCueEvent:
-        this->Animator->StartCue(info, this->Renderer);
+        this->Animator->StartCue(info, this->Renderer, this->Inter);
         break;
       case vtkCommand::EndAnimationCueEvent:
         this->Animator->EndCue(info, this->Renderer);
@@ -302,6 +304,7 @@ public:
 
   vtkRenderer* Renderer;
   vtkRenderWindow* RenWin;
+  vtkRenderWindowInteractor* Inter;
   CueAnimator* Animator;
 
 protected:
@@ -310,5 +313,6 @@ protected:
     this->Renderer = 0;
     this->Animator = 0;
     this->RenWin = 0;
+    this->Inter = 0;
   }
 };

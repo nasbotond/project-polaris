@@ -18,49 +18,25 @@
 
 int main(int argc, char* argv[]) 
 {
-    // if (argc < 6 || argc > 7) 
-    // {
-    //     std::cerr << "Usage: " << argv[0] << " <path to dir of images> <fps> <image width> <image height> <output file prefix> [camera index]" << std::endl;
-    //     return 1;
-    // }
-
-    // std::string sPath = argv[1];
-    // int sFps = std::stoi(argv[2]);
-    // int sWidth = std::stoi(argv[3]);
-    // int sHeight = std::stoi(argv[4]);
-    // std::string outputFileName = argv[5];
-
-    // // Check if path is valid
-    // if(!std::filesystem::exists(sPath)) 
-    // {
-    //     std::cout << "Path is not valid!" << std::endl;
-    //     return 1;
-    // }
-
-    // std::cout << "------------------ Parameters -------------------" << std::endl;
-    // std::cout << "Path = " << sPath << std::endl;
-    // std::cout << "FPS = " << sFps << std::endl;
-    // std::cout << "Image width = " << sWidth << std::endl;
-    // std::cout << "Image height = " << sHeight << std::endl;
-    // std::cout << "Output file prefix = " << outputFileName << std::endl;
-    // std::cout << "-------------------------------------------------" << std::endl;
-
     // Input
     ComplementaryFilter comp = ComplementaryFilter();
     MadgwickFilter madg = MadgwickFilter();
-    CsvReader read = CsvReader();
+    CsvReader read = CsvReader("../test_data/");
     std::vector<std::vector<double>> gravity_vectors;
     
     try 
     {
         read.retrieveFileItems();
 
-        // for (int i = 932; i < 120000; ++i)
-        for (int i = 5000; i < 100001; ++i)
+        for (int i = 0; i < 40001; ++i)
+        // for (int i = 5000; i < 100001; ++i)
         {
-            comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
-            madg.updateMARGFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
-            // madg.updateIMUFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2));
+            // with Magnetometer
+            // comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
+            // madg.updateMARGFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
+            // without Magnetometer
+            comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2));
+            madg.updateIMUFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2));
 
             // float mq1 = madg.q_1*1/sqrt(2) - madg.q_4*1/sqrt(2);
             // float mq2 = madg.q_2*1/sqrt(2) - madg.q_3*1/sqrt(2);
@@ -70,71 +46,76 @@ int main(int argc, char* argv[])
             // madg.q_2 = mq2;
             // madg.q_3 = mq3;
             // madg.q_4 = mq4;
-            // float myaw = atan2(2*madg.q_2*madg.q_3-2*madg.q_1*madg.q_4, 2*madg.q_1 *madg.q_1+2*madg.q_2*madg.q_2-1);
-            // float mpitch = -asin(2*madg.q_2*madg.q_4+2*madg.q_1*madg.q_3);
-            // float mroll = atan2(2*madg.q_3*madg.q_4-2*madg.q_1*madg.q_2, 2*madg.q_1*madg.q_1 + 2*madg.q_4*madg.q_4-1);
-            // gravity_vectors.push_back({-sin(mpitch), cos(mpitch)*sin(mroll), cos(mpitch)*cos(mroll)});
+            float myaw = atan2(2*madg.q_2*madg.q_3-2*madg.q_1*madg.q_4, 2*madg.q_1 *madg.q_1+2*madg.q_2*madg.q_2-1);
+            float mpitch = -asin(2*madg.q_2*madg.q_4+2*madg.q_1*madg.q_3);
+            float mroll = atan2(2*madg.q_3*madg.q_4-2*madg.q_1*madg.q_2, 2*madg.q_1*madg.q_1 + 2*madg.q_4*madg.q_4-1);
+            gravity_vectors.push_back({-sin(mpitch), cos(mpitch)*sin(mroll), cos(mpitch)*cos(mroll)});
 
-            float cyaw = atan2(2*comp.q_2*comp.q_3-2*comp.q_1*comp.q_4, 2*comp.q_1 *comp.q_1+2*comp.q_2*comp.q_2-1);
-            float cpitch = -asin(2*comp.q_2*comp.q_4+2*comp.q_1*comp.q_3);
-            float croll = atan2(2*comp.q_3*comp.q_4-2*comp.q_1*comp.q_2, 2*comp.q_1*comp.q_1 + 2*comp.q_4*comp.q_4-1);
-            gravity_vectors.push_back({-sin(cpitch), cos(cpitch)*sin(croll), cos(cpitch)*cos(croll)});
+            // float cyaw = atan2(2*comp.q_2*comp.q_3-2*comp.q_1*comp.q_4, 2*comp.q_1 *comp.q_1+2*comp.q_2*comp.q_2-1);
+            // float cpitch = -asin(2*comp.q_2*comp.q_4+2*comp.q_1*comp.q_3);
+            // float croll = atan2(2*comp.q_3*comp.q_4-2*comp.q_1*comp.q_2, 2*comp.q_1*comp.q_1 + 2*comp.q_4*comp.q_4-1);
+            // gravity_vectors.push_back({-sin(cpitch), cos(cpitch)*sin(croll), cos(cpitch)*cos(croll)});
+
+            // float gyaw = atan2(2*read.gt.at(i).at(1)*read.gt.at(i).at(2)-2*read.gt.at(i).at(0)*read.gt.at(i).at(3), 2*read.gt.at(i).at(0) *read.gt.at(i).at(0)+2*read.gt.at(i).at(1)*read.gt.at(i).at(1)-1);
+            // float gpitch = -asin(2*read.gt.at(i).at(1)*read.gt.at(i).at(3)+2*read.gt.at(i).at(0)*read.gt.at(i).at(2));
+            // float groll = atan2(2*read.gt.at(i).at(2)*read.gt.at(i).at(3)-2*read.gt.at(i).at(0)*read.gt.at(i).at(1), 2*read.gt.at(i).at(0)*read.gt.at(i).at(0) + 2*read.gt.at(i).at(3)*read.gt.at(i).at(3)-1);
+            // gravity_vectors.push_back({-sin(gpitch), cos(gpitch)*sin(groll), cos(gpitch)*cos(groll)});
         }
-        int i = 100000;
-        // comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
-        // madg.updateMARGFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
-        float cq1 = comp.q_1*1/sqrt(2) - comp.q_4*1/sqrt(2);
-        float cq2 = comp.q_2*1/sqrt(2) - comp.q_3*1/sqrt(2);
-        float cq3 = comp.q_3*1/sqrt(2) + comp.q_2*1/sqrt(2);
-        float cq4 = comp.q_4*1/sqrt(2) + comp.q_1*1/sqrt(2);
-        comp.q_1 = cq1;
-        comp.q_2 = cq2;
-        comp.q_3 = cq3;
-        comp.q_4 = cq4;
+        // int i = 40000;
+        // // comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
+        // // madg.updateMARGFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
+        // float cq1 = comp.q_1*1/sqrt(2) - comp.q_4*1/sqrt(2);
+        // float cq2 = comp.q_2*1/sqrt(2) - comp.q_3*1/sqrt(2);
+        // float cq3 = comp.q_3*1/sqrt(2) + comp.q_2*1/sqrt(2);
+        // float cq4 = comp.q_4*1/sqrt(2) + comp.q_1*1/sqrt(2);
+        // comp.q_1 = cq1;
+        // comp.q_2 = cq2;
+        // comp.q_3 = cq3;
+        // comp.q_4 = cq4;
         
-        float cyaw = atan2(2*comp.q_2*comp.q_3-2*comp.q_1*comp.q_4, 2*comp.q_1 *comp.q_1+2*comp.q_2*comp.q_2-1);
-        float cpitch = -asin(2*comp.q_2*comp.q_4+2*comp.q_1*comp.q_3);
-        float croll = atan2(2*comp.q_3*comp.q_4-2*comp.q_1*comp.q_2, 2*comp.q_1*comp.q_1 + 2*comp.q_4*comp.q_4-1);
-        std::cout << "COMP" << std::endl;
-        std::cout << "y: " << cyaw*(180/M_PI) << std::endl;
-        std::cout << "p: " << cpitch*(180/M_PI) << std::endl;
-        std::cout << "r: " << croll*(180/M_PI) << std::endl;
-        std::cout << "q1: " << comp.q_1 << std::endl;
-        std::cout << "q2: " << comp.q_2 << std::endl;
-        std::cout << "q3: " << comp.q_3 << std::endl;
-        std::cout << "q4: " << comp.q_4 << std::endl;
+        // float cyaw = atan2(2*comp.q_2*comp.q_3-2*comp.q_1*comp.q_4, 2*comp.q_1 *comp.q_1+2*comp.q_2*comp.q_2-1);
+        // float cpitch = -asin(2*comp.q_2*comp.q_4+2*comp.q_1*comp.q_3);
+        // float croll = atan2(2*comp.q_3*comp.q_4-2*comp.q_1*comp.q_2, 2*comp.q_1*comp.q_1 + 2*comp.q_4*comp.q_4-1);
+        // std::cout << "COMP" << std::endl;
+        // std::cout << "y: " << cyaw*(180/M_PI) << std::endl;
+        // std::cout << "p: " << cpitch*(180/M_PI) << std::endl;
+        // std::cout << "r: " << croll*(180/M_PI) << std::endl;
+        // std::cout << "q1: " << comp.q_1 << std::endl;
+        // std::cout << "q2: " << comp.q_2 << std::endl;
+        // std::cout << "q3: " << comp.q_3 << std::endl;
+        // std::cout << "q4: " << comp.q_4 << std::endl;
 
-        float mq1 = madg.q_1*1/sqrt(2) - madg.q_4*1/sqrt(2);
-        float mq2 = madg.q_2*1/sqrt(2) - madg.q_3*1/sqrt(2);
-        float mq3 = madg.q_3*1/sqrt(2) + madg.q_2*1/sqrt(2);
-        float mq4 = madg.q_4*1/sqrt(2) + madg.q_1*1/sqrt(2);
-        madg.q_1 = mq1;
-        madg.q_2 = mq2;
-        madg.q_3 = mq3;
-        madg.q_4 = mq4;
-        float myaw = atan2(2*madg.q_2*madg.q_3-2*madg.q_1*madg.q_4, 2*madg.q_1 *madg.q_1+2*madg.q_2*madg.q_2-1);
-        float mpitch = -asin(2*madg.q_2*madg.q_4+2*madg.q_1*madg.q_3);
-        float mroll = atan2(2*madg.q_3*madg.q_4-2*madg.q_1*madg.q_2, 2*madg.q_1*madg.q_1 + 2*madg.q_4*madg.q_4-1);
-        std::cout << "MADG" << std::endl;
-        std::cout << "y: " << myaw*(180/M_PI) << std::endl;
-        std::cout << "p: " << mpitch*(180/M_PI) << std::endl;
-        std::cout << "r: " << mroll*(180/M_PI) << std::endl;
-        std::cout << "q1: " << madg.q_1 << std::endl;
-        std::cout << "q2: " << madg.q_2 << std::endl;
-        std::cout << "q3: " << madg.q_3 << std::endl;
-        std::cout << "q4: " << madg.q_4 << std::endl;        
+        // float mq1 = madg.q_1*1/sqrt(2) - madg.q_4*1/sqrt(2);
+        // float mq2 = madg.q_2*1/sqrt(2) - madg.q_3*1/sqrt(2);
+        // float mq3 = madg.q_3*1/sqrt(2) + madg.q_2*1/sqrt(2);
+        // float mq4 = madg.q_4*1/sqrt(2) + madg.q_1*1/sqrt(2);
+        // madg.q_1 = mq1;
+        // madg.q_2 = mq2;
+        // madg.q_3 = mq3;
+        // madg.q_4 = mq4;
+        // float myaw = atan2(2*madg.q_2*madg.q_3-2*madg.q_1*madg.q_4, 2*madg.q_1 *madg.q_1+2*madg.q_2*madg.q_2-1);
+        // float mpitch = -asin(2*madg.q_2*madg.q_4+2*madg.q_1*madg.q_3);
+        // float mroll = atan2(2*madg.q_3*madg.q_4-2*madg.q_1*madg.q_2, 2*madg.q_1*madg.q_1 + 2*madg.q_4*madg.q_4-1);
+        // std::cout << "MADG" << std::endl;
+        // std::cout << "y: " << myaw*(180/M_PI) << std::endl;
+        // std::cout << "p: " << mpitch*(180/M_PI) << std::endl;
+        // std::cout << "r: " << mroll*(180/M_PI) << std::endl;
+        // std::cout << "q1: " << madg.q_1 << std::endl;
+        // std::cout << "q2: " << madg.q_2 << std::endl;
+        // std::cout << "q3: " << madg.q_3 << std::endl;
+        // std::cout << "q4: " << madg.q_4 << std::endl;        
 
-        float gyaw = atan2(2*read.gt.at(i).at(1)*read.gt.at(i).at(2)-2*read.gt.at(i).at(0)*read.gt.at(i).at(3), 2*read.gt.at(i).at(0) *read.gt.at(i).at(0)+2*read.gt.at(i).at(1)*read.gt.at(i).at(1)-1);
-        float gpitch = -asin(2*read.gt.at(i).at(1)*read.gt.at(i).at(3)+2*read.gt.at(i).at(0)*read.gt.at(i).at(2));
-        float groll = atan2(2*read.gt.at(i).at(2)*read.gt.at(i).at(3)-2*read.gt.at(i).at(0)*read.gt.at(i).at(1), 2*read.gt.at(i).at(0)*read.gt.at(i).at(0) + 2*read.gt.at(i).at(3)*read.gt.at(i).at(3)-1);
-        std::cout << "GT" << std::endl;
-        std::cout << "y: " << gyaw*(180/M_PI) << std::endl;
-        std::cout << "p: " << gpitch*(180/M_PI) << std::endl;
-        std::cout << "r: " << groll*(180/M_PI) << std::endl;
-        std::cout << "q1: " << read.gt.at(i).at(0) << std::endl;
-        std::cout << "q2: " << read.gt.at(i).at(1) << std::endl;
-        std::cout << "q3: " << read.gt.at(i).at(2) << std::endl;
-        std::cout << "q4: " << read.gt.at(i).at(3) << std::endl;
+        // float gyaw = atan2(2*read.gt.at(i).at(1)*read.gt.at(i).at(2)-2*read.gt.at(i).at(0)*read.gt.at(i).at(3), 2*read.gt.at(i).at(0) *read.gt.at(i).at(0)+2*read.gt.at(i).at(1)*read.gt.at(i).at(1)-1);
+        // float gpitch = -asin(2*read.gt.at(i).at(1)*read.gt.at(i).at(3)+2*read.gt.at(i).at(0)*read.gt.at(i).at(2));
+        // float groll = atan2(2*read.gt.at(i).at(2)*read.gt.at(i).at(3)-2*read.gt.at(i).at(0)*read.gt.at(i).at(1), 2*read.gt.at(i).at(0)*read.gt.at(i).at(0) + 2*read.gt.at(i).at(3)*read.gt.at(i).at(3)-1);
+        // std::cout << "GT" << std::endl;
+        // std::cout << "y: " << gyaw*(180/M_PI) << std::endl;
+        // std::cout << "p: " << gpitch*(180/M_PI) << std::endl;
+        // std::cout << "r: " << groll*(180/M_PI) << std::endl;
+        // std::cout << "q1: " << read.gt.at(i).at(0) << std::endl;
+        // std::cout << "q2: " << read.gt.at(i).at(1) << std::endl;
+        // std::cout << "q3: " << read.gt.at(i).at(2) << std::endl;
+        // std::cout << "q4: " << read.gt.at(i).at(3) << std::endl;
     } 
     catch(const std::exception &e)
     {
@@ -155,7 +136,7 @@ int main(int argc, char* argv[])
     
     iren->SetRenderWindow(renWin);
     renWin->AddRenderer(ren1);
-    ren1->SetBackground(colors->GetColor3d("MistyRose").GetData());
+    // ren1->SetBackground(colors->GetColor3d("MistyRose").GetData());
     ren1->SetBackground(colors->GetColor3d("BkgColor").GetData());
     ren1->GetActiveCamera()->SetPosition(-1, 0, 0);
     ren1->GetActiveCamera()->SetFocalPoint(0, 0, 1.0);
@@ -164,7 +145,7 @@ int main(int argc, char* argv[])
     renWin->SetSize(1200, 1200);
     renWin->Render();
 
-    iren->Start();
+    // iren->Start();
 
     // Create an Animation Scene
     vtkNew<vtkAnimationScene> scene;
@@ -173,14 +154,14 @@ int main(int argc, char* argv[])
     // scene->SetModeToSequence();
 
     scene->SetLoop(0);
-    scene->SetFrameRate(50); // FPS
+    scene->SetFrameRate(0.5); // FPS
     scene->SetStartTime(0);
-    scene->SetEndTime(1800); // how many seconds for it to run for
+    scene->SetEndTime(10); // how many seconds for it to run for
  
     // Create an Animation Cue
     vtkNew<vtkAnimationCue> cue1;
     cue1->SetStartTime(0);
-    cue1->SetEndTime(1800); // how many seconds for it to run for
+    cue1->SetEndTime(10); // how many seconds for it to run for
     scene->AddCue(cue1);
 
     // Create cue animator
@@ -192,15 +173,16 @@ int main(int argc, char* argv[])
     observer->Renderer = ren1;
     observer->Animator = &animator;
     observer->RenWin = renWin;
+    observer->Inter = iren;
 
     cue1->AddObserver(vtkCommand::StartAnimationCueEvent, observer);
     cue1->AddObserver(vtkCommand::EndAnimationCueEvent, observer);
     cue1->AddObserver(vtkCommand::AnimationCueTickEvent, observer);
-
+    
     scene->Play();
     scene->Stop();
 
-    iren->Start();
+    // iren->Start();
 
     return EXIT_SUCCESS;
 }

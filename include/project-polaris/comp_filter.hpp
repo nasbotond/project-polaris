@@ -11,7 +11,7 @@
 #include <math.h>
 #define PI 3.14159265
 
-#define deltat 0.0035f
+#define deltat 0.005f //0.0035f
 #define gyroMeasError 3.14159265358979 * (5.0/180.0)
 #define gain 0.02 //sqrt(3.0/4.0) * gyroMeasError
 
@@ -25,12 +25,13 @@ class ComplementaryFilter
         // std::string outputFileName;
 
     public:
-        // ComplementaryFilter() : q_1(1.0f), q_2(0.0f), q_3(0.0f), q_4(0.0f) {}
-        ComplementaryFilter() : q_1(0.99886), q_2(0.0072345), q_3(-0.00048461), q_4(-0.04713) {}
+        ComplementaryFilter() : q_1(1.0f), q_2(0.0f), q_3(0.0f), q_4(0.0f) {}
+        // ComplementaryFilter() : q_1(0.99886), q_2(0.0072345), q_3(-0.00048461), q_4(-0.04713) {}
         ~ComplementaryFilter() {}
 
         // Main functions
         void updateFilter(float w_x, float w_y, float w_z, float a_x, float a_y, float a_z, float m_x, float m_y, float m_z);
+        void updateFilter(float w_x, float w_y, float w_z, float a_x, float a_y, float a_z);
 
         // Helper functions
 

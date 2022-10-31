@@ -7,7 +7,8 @@
  */
 void CsvReader::retrieveFileItems()
 {
-    std::fstream afile("../test_data/imu_acc.csv", std::ios::in);
+    std::fstream afile("../test_data/imu_acc_.csv", std::ios::in);
+    // std::fstream afile(this->sPath, std::ios::in);
     std::string aline;
     if (afile.is_open())
     {
@@ -21,7 +22,7 @@ void CsvReader::retrieveFileItems()
         throw std::runtime_error("Error: failed to open file");
     }
 
-    std::fstream wfile("../test_data/imu_gyr.csv", std::ios::in);
+    std::fstream wfile("../test_data/imu_gyr_.csv", std::ios::in);
     std::string gline;
     if (wfile.is_open())
     {
@@ -35,33 +36,33 @@ void CsvReader::retrieveFileItems()
         throw std::runtime_error("Error: failed to open file");
     }
 
-    std::fstream mfile("../test_data/imu_mag.csv", std::ios::in);
-    std::string mline;
-    if (mfile.is_open())
-    {
-        while (getline(mfile, mline))
-        {
-            this->m.push_back(split(mline, ','));
-        }
-    }
-    else
-    {
-        throw std::runtime_error("Error: failed to open file");
-    }
+    // std::fstream mfile("../test_data/imu_mag.csv", std::ios::in);
+    // std::string mline;
+    // if (mfile.is_open())
+    // {
+    //     while (getline(mfile, mline))
+    //     {
+    //         this->m.push_back(split(mline, ','));
+    //     }
+    // }
+    // else
+    // {
+    //     throw std::runtime_error("Error: failed to open file");
+    // }
 
-    std::fstream file("../test_data/opt_quat.csv", std::ios::in);
-    std::string line;
-    if (file.is_open())
-    {
-        while (getline(file, line))
-        {
-            this->gt.push_back(split(line, ','));
-        }
-    }
-    else
-    {
-        throw std::runtime_error("Error: failed to open file");
-    }
+    // std::fstream file("../test_data/opt_quat.csv", std::ios::in);
+    // std::string line;
+    // if (file.is_open())
+    // {
+    //     while (getline(file, line))
+    //     {
+    //         this->gt.push_back(split(line, ','));
+    //     }
+    // }
+    // else
+    // {
+    //     throw std::runtime_error("Error: failed to open file");
+    // }
 }
 
 /**

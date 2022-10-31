@@ -17,11 +17,11 @@
 class CsvReader
 {
     private:
-        
+        std::string sPath;
 
     public:
 
-        CsvReader() {}
+        CsvReader(const std::string &sPath) : sPath(sPath) {}
         ~CsvReader() {}
 
         // Main functions
