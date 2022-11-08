@@ -15,6 +15,8 @@
 #include <vtkActor.h>
 #include <vtkAxesActor.h>
 #include <vtkMinimalStandardRandomSequence.h>
+#include <vtkTextActor.h>
+#include <vtkTextProperty.h>
 
 class CueAnimator
 {
@@ -31,6 +33,8 @@ public:
     this->PlaneSource = 0;
     this->PlaneMapper = 0;
     this->PlaneActor = 0;
+
+    this->TextActor = 0;
   }
 
   ~CueAnimator()
@@ -141,10 +145,18 @@ public:
     this->PlaneActor->SetMapper(this->PlaneMapper);
     this->PlaneActor->GetProperty()->SetColor(colors->GetColor3d("Banana").GetData());
 
+    // Setup the text and add it to the renderer
+    this->TextActor = vtkTextActor::New();
+    this->TextActor->SetInput("TICK COUNT");
+    this->TextActor->SetPosition2(20, 40);
+    this->TextActor->GetTextProperty()->SetFontSize(24);
+    this->TextActor->GetTextProperty()->SetColor(colors->GetColor3d("Gold").GetData());
+
     // Add the actor to the scene
     ren->AddActor(this->PlaneActor);
     ren->AddActor(axes);
     ren->AddActor(this->ArrowActor);
+    ren->AddActor2D(this->TextActor);
 
     // Render and interact
     ren->ResetCamera();
@@ -210,6 +222,9 @@ public:
 
     this->PlaneSource->SetNormal(endPoint[0], endPoint[1], endPoint[2]); 
     this->PlaneSource->Update();
+
+    this->TextActor->SetInput(std::to_string(tick).c_str());
+
     ren->Render();
 
     tick++;
@@ -232,6 +247,7 @@ protected:
   vtkPlaneSource* PlaneSource;
   vtkPolyDataMapper* PlaneMapper;
   vtkActor* PlaneActor;
+  vtkTextActor* TextActor;
 
   void Cleanup()
   {
@@ -264,6 +280,11 @@ protected:
     {
       this->PlaneActor->Delete();
       this->PlaneActor = 0;
+    }
+    if (this->TextActor != 0)
+    {
+      this->TextActor->Delete();
+      this->TextActor = 0;
     }
   }
 };

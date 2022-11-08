@@ -28,8 +28,8 @@ int main(int argc, char* argv[])
     {
         read.retrieveFileItems();
 
-        for (int i = 0; i < 40001; ++i)
-        // for (int i = 5000; i < 100001; ++i)
+        // for (int i = 0; i < 40001; ++i)
+        for (int i = 5000; i < 100001; ++i)
         {
             // with Magnetometer
             // comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
@@ -123,6 +123,9 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    int endTime = 120;
+    double frameRate = 2.5;
+
     vtkNew<vtkNamedColors> colors;
     std::array<unsigned char, 4> bkg{{26, 51, 77, 255}};
     colors->SetColor("BkgColor", bkg.data());
@@ -154,14 +157,14 @@ int main(int argc, char* argv[])
     // scene->SetModeToSequence();
 
     scene->SetLoop(0);
-    scene->SetFrameRate(0.5); // FPS
+    scene->SetFrameRate(frameRate); // FPS
     scene->SetStartTime(0);
-    scene->SetEndTime(10); // how many seconds for it to run for
+    scene->SetEndTime(endTime); // how many seconds for it to run for
  
     // Create an Animation Cue
     vtkNew<vtkAnimationCue> cue1;
     cue1->SetStartTime(0);
-    cue1->SetEndTime(10); // how many seconds for it to run for
+    cue1->SetEndTime(endTime); // how many seconds for it to run for
     scene->AddCue(cue1);
 
     // Create cue animator
