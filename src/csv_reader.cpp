@@ -3,7 +3,7 @@
 /**
  * @brief Read file contents into vector line by line.
  *
- * The format of the file is consistent with a ';' used as a delimiter. This function essentailly tokenizes the data line by line.
+ * The format of the file is consistent with a ',' used as a delimiter. This function essentailly tokenizes the data line by line.
  */
 void CsvReader::retrieveFileItems()
 {

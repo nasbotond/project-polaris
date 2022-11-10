@@ -17,7 +17,7 @@
 
 #define PI 3.14159265
 
-#define deltat 0.005f //0.0035f
+#define deltat 0.0035f //0.0035f
 // #define gyroMeasError 3.14159265358979 * (5.0/180.0)
 // #define gyroMeasDrift 3.14159265358979 * (0.2/180.0)
 // #define beta sqrt(3.0/4.0) * gyroMeasError

@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
         read.retrieveFileItems();
 
         // for (int i = 0; i < 40001; ++i)
-        for (int i = 5000; i < 100001; ++i)
+        for (int i = 10000; i < 50001; ++i)
         {
             // with Magnetometer
             // comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
@@ -123,8 +123,8 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    int endTime = 120;
-    double frameRate = 2.5;
+    int endTime = 200;
+    double frameRate = 5;
 
     vtkNew<vtkNamedColors> colors;
     std::array<unsigned char, 4> bkg{{26, 51, 77, 255}};
