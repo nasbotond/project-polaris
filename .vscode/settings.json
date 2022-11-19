@@ -89,6 +89,8 @@
         "cfenv": "cpp",
         "cinttypes": "cpp",
         "filesystem": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "shared_mutex": "cpp",
+        "strstream": "cpp"
     }
 }

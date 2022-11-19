@@ -20,23 +20,42 @@ int main(int argc, char* argv[])
 {
     // Input
     ComplementaryFilter comp = ComplementaryFilter();
+    ComplementaryFilter comp_mag = ComplementaryFilter();
     MadgwickFilter madg = MadgwickFilter();
+    MadgwickFilter madg_mag = MadgwickFilter();
+
     CsvReader read = CsvReader("../test_data/");
     std::vector<std::vector<double>> gravity_vectors;
+
+    std::ofstream est_madg_mag;
+    std::ofstream est_madg_no_mag;
+    std::ofstream est_comp_mag;
+    std::ofstream est_comp_no_mag;
     
-    try 
+    try
     {
         read.retrieveFileItems();
+
+        est_madg_mag.open ("../results/est_madg_mag.csv");
+        est_madg_no_mag.open ("../results/est_madg_no_mag.csv");
+        est_comp_mag.open ("../results/est_comp_mag.csv");
+        est_comp_no_mag.open ("../results/est_comp_no_mag.csv");
 
         // for (int i = 0; i < 40001; ++i)
         for (int i = 10000; i < 50001; ++i)
         {
             // with Magnetometer
-            // comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
-            // madg.updateMARGFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
+            comp_mag.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
+            madg_mag.updateMARGFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2), read.m.at(i).at(0), read.m.at(i).at(1), read.m.at(i).at(2));
             // without Magnetometer
             comp.updateFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2));
             madg.updateIMUFilter(read.w.at(i).at(0), read.w.at(i).at(1), read.w.at(i).at(2), read.a.at(i).at(0), read.a.at(i).at(1), read.a.at(i).at(2));
+
+            est_madg_mag << madg_mag.q_1 << "," << madg_mag.q_2 << "," << madg_mag.q_3 << "," << madg_mag.q_4 << "\n";
+            est_comp_mag << comp_mag.q_1 << "," << comp_mag.q_2 << "," << comp_mag.q_3 << "," << comp_mag.q_4 << "\n";
+
+            est_madg_no_mag << madg.q_1 << "," << madg.q_2 << "," << madg.q_3 << "," << madg.q_4 << "\n";
+            est_comp_no_mag << comp.q_1 << "," << comp.q_2 << "," << comp.q_3 << "," << comp.q_4 << "\n";
 
             // float mq1 = madg.q_1*1/sqrt(2) - madg.q_4*1/sqrt(2);
             // float mq2 = madg.q_2*1/sqrt(2) - madg.q_3*1/sqrt(2);
@@ -116,6 +135,11 @@ int main(int argc, char* argv[])
         // std::cout << "q2: " << read.gt.at(i).at(1) << std::endl;
         // std::cout << "q3: " << read.gt.at(i).at(2) << std::endl;
         // std::cout << "q4: " << read.gt.at(i).at(3) << std::endl;
+
+        est_madg_mag.close();
+        est_madg_no_mag.close();
+        est_comp_mag.close();
+        est_comp_no_mag.close();
     } 
     catch(const std::exception &e)
     {

@@ -50,7 +50,7 @@ void CsvReader::retrieveFileItems()
         throw std::runtime_error("Error: failed to open file");
     }
 
-    std::fstream file("../test_data/opt_quat.csv", std::ios::in);
+    std::fstream file("../results/opt_quat.csv", std::ios::in);
     std::string line;
     if (file.is_open())
     {
