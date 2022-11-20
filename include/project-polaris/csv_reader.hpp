@@ -13,6 +13,8 @@
 #include <sstream>
 #include <numeric>
 #include <vector>
+#include "quaternion.hpp"
+#include "vec3.hpp"
 
 class CsvReader
 {
@@ -31,8 +33,8 @@ class CsvReader
         std::vector<float> split(const std::string &s, char delim) const;
 
         // Variables
-        std::vector<std::vector<float>> a;
-        std::vector<std::vector<float>> w;
-        std::vector<std::vector<float>> m;
-        std::vector<std::vector<float>> gt;
+        std::vector<Vec3> a;
+        std::vector<Vec3> w;
+        std::vector<Vec3> m;
+        std::vector<Quaternion> gt;
 };

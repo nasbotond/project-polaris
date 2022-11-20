@@ -14,6 +14,8 @@
 #include <sstream>
 #include <numeric>
 #include <vector>
+#include "quaternion.hpp"
+#include "vec3.hpp"
 
 #define PI 3.14159265
 
@@ -28,30 +30,20 @@
 class MadgwickFilter
 {
     private:
-        // std::string sPath;
-        // int sFps;
-        // int sWidth;
-        // int sHeight;
-        // std::string outputFileName;
 
     public:
 
-        // MadgwickFilter(const std::string &sPath, const int &sFps, const int &sWidth, const int &sHeight, const std::string &outputFileName) : sPath(sPath), sFps(sFps), sWidth(sWidth), sHeight(sHeight), outputFileName(outputFileName) {}
-        // MadgwickFilter() : q_1(1.0f), q_2(0.0f), q_3(0.0f), q_4(0.0f) {}
-        MadgwickFilter() : q_1(0.99886), q_2(0.0072345), q_3(-0.00048461), q_4(-0.04713) {}
+        MadgwickFilter() : q(Quaternion(0.99886, 0.0072345, -0.00048461, -0.04713)) {}
         ~MadgwickFilter() {}
 
         // Main functions
-        void updateMARGFilter(float w_x, float w_y, float w_z, float a_x, float a_y, float a_z, float m_x, float m_y, float m_z);
-        void updateIMUFilter(float w_x, float w_y, float w_z, float a_x, float a_y, float a_z);
+        void updateMARGFilter(Vec3 w, Vec3 a, Vec3 m);
+        void updateIMUFilter(Vec3 w, Vec3 a);
 
         // Helper functions
 
         // Variables
-        float a_x, a_y, a_z;
-        float w_x, w_y, w_z;
-        float m_x, m_y, m_z;
-        float q_1, q_2, q_3, q_4;
-        float b_x = 1.0, b_z = 0;
+        Quaternion q;
+        // float b_x = 1.0, b_z = 0;
         float w_bx = 0, w_by = 0, w_bz = 0;
 };

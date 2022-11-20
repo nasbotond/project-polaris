@@ -1,0 +1,7 @@
+namespace Metrics
+{
+    void RMSE()
+    {
+
+    }
+}

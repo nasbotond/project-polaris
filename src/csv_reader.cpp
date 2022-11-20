@@ -14,7 +14,8 @@ void CsvReader::retrieveFileItems()
     {
         while (getline(afile, aline))
         {
-            this->a.push_back(split(aline, ','));
+            std::vector<float> a = split(aline, ',');
+            this->a.push_back(Vec3(a.at(0), a.at(1), a.at(2)));
         }
     }
     else
@@ -28,7 +29,8 @@ void CsvReader::retrieveFileItems()
     {
         while (getline(wfile, gline))
         {
-            this->w.push_back(split(gline, ','));
+            std::vector<float> g = split(gline, ',');
+            this->w.push_back(Vec3(g.at(0), g.at(1), g.at(2)));
         }
     }
     else
@@ -42,7 +44,8 @@ void CsvReader::retrieveFileItems()
     {
         while (getline(mfile, mline))
         {
-            this->m.push_back(split(mline, ','));
+            std::vector<float> m = split(mline, ',');
+            this->m.push_back(Vec3(m.at(0), m.at(1), m.at(2)));
         }
     }
     else
@@ -56,7 +59,8 @@ void CsvReader::retrieveFileItems()
     {
         while (getline(file, line))
         {
-            this->gt.push_back(split(line, ','));
+            std::vector<float> gt = split(line, ',');
+            this->gt.push_back(Quaternion(gt.at(0), gt.at(1), gt.at(2), gt.at(3)));
         }
     }
     else
