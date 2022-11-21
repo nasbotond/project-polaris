@@ -29,9 +29,13 @@ void MadgwickFilter::updateMARGFilter(Vec3 &w, Vec3 &a, Vec3 &m)
     float q_2q_3 = this->q.q_2 * this->q.q_3;
     float q_2q_4 = this->q.q_2 * this->q.q_4;
 
-    h_x = twom_x * (0.5f - this->q.q_3 * this->q.q_3 - this->q.q_4 * this->q.q_4) + twom_y * (q_2q_3 - q_1q_4) + twom_z * (q_2q_4 + q_1q_3);
-    h_y = twom_x * (q_2q_3 + q_1q_4) + twom_y * (0.5f - this->q.q_2 * this->q.q_2 - this->q.q_4 * this->q.q_4) + twom_z * (q_3q_4 - q_1q_2);
-    h_z = twom_x * (q_2q_4 - q_1q_3) + twom_y * (q_3q_4 + q_1q_2) + twom_z * (0.5f - this->q.q_2 * this->q.q_2 - this->q.q_3 * this->q.q_3);
+    // h_x = twom_x * (0.5f - this->q.q_3 * this->q.q_3 - this->q.q_4 * this->q.q_4) + twom_y * (q_2q_3 - q_1q_4) + twom_z * (q_2q_4 + q_1q_3);
+    // h_y = twom_x * (q_2q_3 + q_1q_4) + twom_y * (0.5f - this->q.q_2 * this->q.q_2 - this->q.q_4 * this->q.q_4) + twom_z * (q_3q_4 - q_1q_2);
+    // h_z = twom_x * (q_2q_4 - q_1q_3) + twom_y * (q_3q_4 + q_1q_2) + twom_z * (0.5f - this->q.q_2 * this->q.q_2 - this->q.q_3 * this->q.q_3);
+    
+    h_x = m.x * (q.q_1*q.q_1 + q.q_2*q.q_2 -q.q_3*q.q_3 - q.q_4*q.q_4) + twom_y * (q_2q_3 - q_1q_4) + twom_z * (q_2q_4 + q_1q_3);
+    h_y = twom_x * (q_2q_3 + q_1q_4) + m.y * (q.q_1*q.q_1 - q.q_2*q.q_2 + q.q_3*q.q_3 - q.q_4*q.q_4) + twom_z * (q_3q_4 - q_1q_2);
+    h_z = twom_x * (q_2q_4 - q_1q_3) + twom_y * (q_3q_4 + q_1q_2) + m.z * (q.q_1*q.q_1 - q.q_2*q.q_2 - q.q_3*q.q_3 + q.q_4*q.q_4);
 
     // normalise the flux vector to have only components in the x and z
     float b_x = sqrt((h_x * h_x) + (h_y * h_y));
@@ -158,7 +162,7 @@ void MadgwickFilter::updateIMUFilter(Vec3 &w, Vec3 &a)
 
         f_1 = twoq_2 * q_4 - twoq_1 * q_3 - a.x;
         f_2 = twoq_1 * q_2 + twoq_3 * q_4 - a.y;
-        f_3 = 1.0f - twoq_2 * q_2 - twoq_3 * q_3 - a.z; 
+        f_3 = 1.0f - twoq_2 * q_2 - twoq_3 * q_3 - a.z;
         J_11or24 = twoq_3;
         J_12or23 = 2.0f * q_4;
         J_13or22 = twoq_1;
@@ -167,8 +171,8 @@ void MadgwickFilter::updateIMUFilter(Vec3 &w, Vec3 &a)
         J_33 = 2.0f * J_11or24;
 
         qHatDot.q_1 = J_14or21 * f_2 - J_11or24 * f_1;
-        qHatDot.q_2 = J_12or23 * f_1 + J_13or22 * f_2 - J_32 * f_3; 
-        qHatDot.q_3 = J_12or23 * f_2 - J_33 * f_3 - J_13or22 * f_1; 
+        qHatDot.q_2 = J_12or23 * f_1 + J_13or22 * f_2 - J_32 * f_3;
+        qHatDot.q_3 = J_12or23 * f_2 - J_33 * f_3 - J_13or22 * f_1;
         qHatDot.q_4 = J_14or21 * f_1 + J_11or24 * f_2;
 
         qHatDot.norm();

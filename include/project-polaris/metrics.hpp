@@ -2,6 +2,7 @@
 
 namespace Metrics
 {
+    // Inverse same as conjugate for unit quaternions
     Quaternion inv(const Quaternion &q)
     {
         Quaternion inv = q;
@@ -30,11 +31,29 @@ namespace Metrics
         return error_q;
     }
 
-    float angular_dist(const Quaternion &error_q)
+    Quaternion error_quaternion_earth(Quaternion &gt, Quaternion &est)
+    {
+        Quaternion gt_inv = inv(gt);
+        Quaternion error_q = hamiltonProduct(est, gt_inv);
+        error_q.norm();
+        return error_q;
+    }
+
+    float total_error(const Quaternion &error_q)
     {
         return 2.0f*acos(abs(error_q.q_1));
     }
 
+    float heading_error(const Quaternion &error_q)
+    {
+        return 2.0f * atan2(abs(error_q.q_4), abs(error_q.q_1));
+    }
+
+    float inclination_error(const Quaternion &error_q)
+    {
+        return 2.0f * acos(sqrt(error_q.q_1*error_q.q_1 + error_q.q_4*error_q.q_4));
+    }
+    
     void RMSE()
     {
 

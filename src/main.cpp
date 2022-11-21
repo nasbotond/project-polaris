@@ -19,7 +19,7 @@
 
 int main(int argc, char* argv[])
 {
-    float deltat = 1.0f/280.0f;
+    float deltat = 1.0f/286.0f;
     float compGain = 0.2;
 
     // Input
@@ -52,6 +52,8 @@ int main(int argc, char* argv[])
         e.open ("../results/e.csv");
 
         float sum = 0.0;
+        float sum_inc = 0.0;
+        float sum_head = 0.0;
 
         // for (int i = 0; i < 40001; ++i)
         for (int i = 10000; i < 45001; ++i)
@@ -70,10 +72,15 @@ int main(int argc, char* argv[])
             est_comp_no_mag << comp.q.q_1 << "," << comp.q.q_2 << "," << comp.q.q_3 << "," << comp.q.q_4 << "\n";
 
             Quaternion err_quat = Metrics::error_quaternion(read.gt.at(i), madg_mag.q);
+            Quaternion err_quat_1 = Metrics::error_quaternion_earth(read.gt.at(i), madg_mag.q);
             quat_err << err_quat.q_1 << "," << err_quat.q_2 << "," << err_quat.q_3 << "," << err_quat.q_4 << "\n";
-            float err = Metrics::angular_dist(err_quat);
-            sum += err;
-            e << err << "\n";
+            float err = Metrics::total_error(err_quat);
+            float err_inc = Metrics::inclination_error(err_quat_1);
+            float err_head = Metrics::heading_error(err_quat_1);
+            sum += err*err;
+            sum_inc += err_inc*err_inc;
+            sum_head += err_head*err_head;
+            e << err << "," << err_inc << "," << err_head << "\n";
 
             // float mq1 = madg.q_1*1/sqrt(2) - madg.q_4*1/sqrt(2);
             // float mq2 = madg.q_2*1/sqrt(2) - madg.q_3*1/sqrt(2);
@@ -101,65 +108,14 @@ int main(int argc, char* argv[])
             // float groll = atan2(2*read.gt.at(i)z*read.gt.at(i).at(3)-2*read.gt.at(i)x*read.gt.at(i)x, 2*read.gt.at(i)x*read.gt.at(i)x + 2*read.gt.at(i).at(3)*read.gt.at(i).at(3)-1);
             // gravity_vectors.push_back({-sin(gpitch), cos(gpitch)*sin(groll), cos(gpitch)*cos(groll)});
         }
-        // int i = 40000;
-        // // comp.updateFilter(read.w.at(i)x, read.w.at(i)x, read.w.at(i)z, read.a.at(i)x, read.a.at(i)x, read.a.at(i)z, read.m.at(i)x, read.m.at(i)x, read.m.at(i)z);
-        // // madg.updateMARGFilter(read.w.at(i)x, read.w.at(i)x, read.w.at(i)z, read.a.at(i)x, read.a.at(i)x, read.a.at(i)z, read.m.at(i)x, read.m.at(i)x, read.m.at(i)z);
-        // float cq1 = comp.q_1*1/sqrt(2) - comp.q_4*1/sqrt(2);
-        // float cq2 = comp.q_2*1/sqrt(2) - comp.q_3*1/sqrt(2);
-        // float cq3 = comp.q_3*1/sqrt(2) + comp.q_2*1/sqrt(2);
-        // float cq4 = comp.q_4*1/sqrt(2) + comp.q_1*1/sqrt(2);
-        // comp.q_1 = cq1;
-        // comp.q_2 = cq2;
-        // comp.q_3 = cq3;
-        // comp.q_4 = cq4;
-        
-        // float cyaw = atan2(2*comp.q_2*comp.q_3-2*comp.q_1*comp.q_4, 2*comp.q_1 *comp.q_1+2*comp.q_2*comp.q_2-1);
-        // float cpitch = -asin(2*comp.q_2*comp.q_4+2*comp.q_1*comp.q_3);
-        // float croll = atan2(2*comp.q_3*comp.q_4-2*comp.q_1*comp.q_2, 2*comp.q_1*comp.q_1 + 2*comp.q_4*comp.q_4-1);
-        // std::cout << "COMP" << std::endl;
-        // std::cout << "y: " << cyaw*(180/M_PI) << std::endl;
-        // std::cout << "p: " << cpitch*(180/M_PI) << std::endl;
-        // std::cout << "r: " << croll*(180/M_PI) << std::endl;
-        // std::cout << "q1: " << comp.q_1 << std::endl;
-        // std::cout << "q2: " << comp.q_2 << std::endl;
-        // std::cout << "q3: " << comp.q_3 << std::endl;
-        // std::cout << "q4: " << comp.q_4 << std::endl;
 
-        // float mq1 = madg.q_1*1/sqrt(2) - madg.q_4*1/sqrt(2);
-        // float mq2 = madg.q_2*1/sqrt(2) - madg.q_3*1/sqrt(2);
-        // float mq3 = madg.q_3*1/sqrt(2) + madg.q_2*1/sqrt(2);
-        // float mq4 = madg.q_4*1/sqrt(2) + madg.q_1*1/sqrt(2);
-        // madg.q_1 = mq1;
-        // madg.q_2 = mq2;
-        // madg.q_3 = mq3;
-        // madg.q_4 = mq4;
-        // float myaw = atan2(2*madg.q_2*madg.q_3-2*madg.q_1*madg.q_4, 2*madg.q_1 *madg.q_1+2*madg.q_2*madg.q_2-1);
-        // float mpitch = -asin(2*madg.q_2*madg.q_4+2*madg.q_1*madg.q_3);
-        // float mroll = atan2(2*madg.q_3*madg.q_4-2*madg.q_1*madg.q_2, 2*madg.q_1*madg.q_1 + 2*madg.q_4*madg.q_4-1);
-        // std::cout << "MADG" << std::endl;
-        // std::cout << "y: " << myaw*(180/M_PI) << std::endl;
-        // std::cout << "p: " << mpitch*(180/M_PI) << std::endl;
-        // std::cout << "r: " << mroll*(180/M_PI) << std::endl;
-        // std::cout << "q1: " << madg.q_1 << std::endl;
-        // std::cout << "q2: " << madg.q_2 << std::endl;
-        // std::cout << "q3: " << madg.q_3 << std::endl;
-        // std::cout << "q4: " << madg.q_4 << std::endl;        
-
-        // float gyaw = atan2(2*read.gt.at(i)x*read.gt.at(i)z-2*read.gt.at(i)x*read.gt.at(i).at(3), 2*read.gt.at(i)x *read.gt.at(i)x+2*read.gt.at(i)x*read.gt.at(i)x-1);
-        // float gpitch = -asin(2*read.gt.at(i)x*read.gt.at(i).at(3)+2*read.gt.at(i)x*read.gt.at(i)z);
-        // float groll = atan2(2*read.gt.at(i)z*read.gt.at(i).at(3)-2*read.gt.at(i)x*read.gt.at(i)x, 2*read.gt.at(i)x*read.gt.at(i)x + 2*read.gt.at(i).at(3)*read.gt.at(i).at(3)-1);
-        // std::cout << "GT" << std::endl;
-        // std::cout << "y: " << gyaw*(180/M_PI) << std::endl;
-        // std::cout << "p: " << gpitch*(180/M_PI) << std::endl;
-        // std::cout << "r: " << groll*(180/M_PI) << std::endl;
-        // std::cout << "q1: " << read.gt.at(i)x << std::endl;
-        // std::cout << "q2: " << read.gt.at(i)x << std::endl;
-        // std::cout << "q3: " << read.gt.at(i)z << std::endl;
-        // std::cout << "q4: " << read.gt.at(i).at(3) << std::endl;
-
-        float rmse = sqrt(pow(sum/35001.0f, 2));
+        float rmse = sqrt(sum/35001.0f);
+        float rmse_inc = sqrt(sum_inc/35001.0f);
+        float rmse_head = sqrt(sum_head/35001.0f);
         std::cout << sum << std::endl;
         std::cout << rmse << std::endl;
+        std::cout << rmse_inc << std::endl;
+        std::cout << rmse_head << std::endl;
 
         est_madg_mag.close();
         est_madg_no_mag.close();
