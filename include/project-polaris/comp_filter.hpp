@@ -13,16 +13,16 @@
 #include "vec3.hpp"
 #define PI 3.14159265
 
-#define deltat 0.0035f //0.0035f
+// #define deltat 0.0035f //0.0035f
 #define gyroMeasError 3.14159265358979 * (5.0/180.0)
-#define gain 0.02 //sqrt(3.0/4.0) * gyroMeasError
+// #define gain 0.02 //sqrt(3.0/4.0) * gyroMeasError
 
 class ComplementaryFilter
 {
     private:
 
     public:
-        ComplementaryFilter() : q(Quaternion(1.0, 0, 0, 0)) {}
+        ComplementaryFilter(float deltat, float gain) : deltat(deltat), gain(gain), q(Quaternion(1.0, 0, 0, 0)) {}
         ~ComplementaryFilter() {}
 
         // Main functions
@@ -33,4 +33,6 @@ class ComplementaryFilter
 
         // Variables
         Quaternion q;
+        float deltat;
+        float gain;
 };

@@ -18,11 +18,13 @@
 
 int main(int argc, char* argv[])
 {
+    float deltat = 1/280;
+    float compGain = 0.2;
     // Input
-    ComplementaryFilter comp = ComplementaryFilter();
-    ComplementaryFilter comp_mag = ComplementaryFilter();
-    MadgwickFilter madg = MadgwickFilter();
-    MadgwickFilter madg_mag = MadgwickFilter();
+    ComplementaryFilter comp = ComplementaryFilter(deltat, compGain);
+    ComplementaryFilter comp_mag = ComplementaryFilter(deltat, compGain);
+    MadgwickFilter madg = MadgwickFilter(deltat);
+    MadgwickFilter madg_mag = MadgwickFilter(deltat);
 
     CsvReader read = CsvReader("../test_data/");
     std::vector<std::vector<double>> gravity_vectors;

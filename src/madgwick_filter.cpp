@@ -122,10 +122,10 @@ void MadgwickFilter::updateMARGFilter(Vec3 w, Vec3 a, Vec3 m)
     qDot_omega.q_4 = halfq_1 * w.z + halfq_2 * w.y - halfq_3 * w.x;
 
     // compute then integrate the estimated quaternion rate
-    this->q.q_1 += (qDot_omega.q_1 - (beta * qHatDot.q_1)) * deltat;
-    this->q.q_2 += (qDot_omega.q_2 - (beta * qHatDot.q_2)) * deltat;
-    this->q.q_3 += (qDot_omega.q_3 - (beta * qHatDot.q_3)) * deltat;
-    this->q.q_4 += (qDot_omega.q_4 - (beta * qHatDot.q_4)) * deltat;
+    this->q.q_1 += (qDot_omega.q_1 - (beta * qHatDot.q_1)) * this->deltat;
+    this->q.q_2 += (qDot_omega.q_2 - (beta * qHatDot.q_2)) * this->deltat;
+    this->q.q_3 += (qDot_omega.q_3 - (beta * qHatDot.q_3)) * this->deltat;
+    this->q.q_4 += (qDot_omega.q_4 - (beta * qHatDot.q_4)) * this->deltat;
 
     // normalise quaternion
     this->q.norm();
@@ -184,10 +184,10 @@ void MadgwickFilter::updateIMUFilter(Vec3 w, Vec3 a)
     qDot_omega.q_3 = halfq_1 * w.y - halfq_2 * w.z + halfq_4 * w.x;
     qDot_omega.q_4 = halfq_1 * w.z + halfq_2 * w.y - halfq_3 * w.x;
 
-    this->q.q_1 += (qDot_omega.q_1 - (beta * qHatDot.q_1)) * deltat;
-    this->q.q_2 += (qDot_omega.q_2 - (beta * qHatDot.q_2)) * deltat;
-    this->q.q_3 += (qDot_omega.q_3 - (beta * qHatDot.q_3)) * deltat;
-    this->q.q_4 += (qDot_omega.q_4 - (beta * qHatDot.q_4)) * deltat;
+    this->q.q_1 += (qDot_omega.q_1 - (beta * qHatDot.q_1)) * this->deltat;
+    this->q.q_2 += (qDot_omega.q_2 - (beta * qHatDot.q_2)) * this->deltat;
+    this->q.q_3 += (qDot_omega.q_3 - (beta * qHatDot.q_3)) * this->deltat;
+    this->q.q_4 += (qDot_omega.q_4 - (beta * qHatDot.q_4)) * this->deltat;
 
     this->q.norm();
 

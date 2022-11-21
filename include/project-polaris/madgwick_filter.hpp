@@ -19,7 +19,7 @@
 
 #define PI 3.14159265
 
-#define deltat 0.0035f //0.0035f
+// #define deltat 0.0035f //0.0035f
 // #define gyroMeasError 3.14159265358979 * (5.0/180.0)
 // #define gyroMeasDrift 3.14159265358979 * (0.2/180.0)
 // #define beta sqrt(3.0/4.0) * gyroMeasError
@@ -33,7 +33,7 @@ class MadgwickFilter
 
     public:
 
-        MadgwickFilter() : q(Quaternion(0.99886, 0.0072345, -0.00048461, -0.04713)) {}
+        MadgwickFilter(float deltat) : deltat(deltat), q(Quaternion(0.99886, 0.0072345, -0.00048461, -0.04713)) {}
         ~MadgwickFilter() {}
 
         // Main functions
@@ -46,4 +46,5 @@ class MadgwickFilter
         Quaternion q;
         // float b_x = 1.0, b_z = 0;
         float w_bx = 0, w_by = 0, w_bz = 0;
+        float deltat;
 };

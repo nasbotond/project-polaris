@@ -3,7 +3,7 @@
 void ComplementaryFilter::updateFilter(Vec3 w, Vec3 a, Vec3 m)
 {
     float norm;
-    float oneMinusGain = 1 - gain;
+    float oneMinusGain = 1 - this->gain;
 
     Quaternion q_omega = Quaternion(0, 0, 0, 0);
     Quaternion q_am = Quaternion(0, 0, 0, 0);
@@ -36,10 +36,10 @@ void ComplementaryFilter::updateFilter(Vec3 w, Vec3 a, Vec3 m)
     q_omega.q_3 = half_q_1 * w.y - half_q_2 * w.z + half_q_4 * w.x;
     q_omega.q_4 = -half_q_1 * w.z + half_q_2 * w.y - half_q_3 * w.x;
 
-    this->q.q_1 += (q_omega.q_1 * deltat * oneMinusGain) - gain*(this->q.q_1 - q_am.q_1);
-    this->q.q_2 += (q_omega.q_2 * deltat * oneMinusGain) - gain*(this->q.q_2 - q_am.q_2);
-    this->q.q_3 += (q_omega.q_3 * deltat * oneMinusGain) - gain*(this->q.q_3 - q_am.q_3);
-    this->q.q_4 += (q_omega.q_4 * deltat * oneMinusGain) - gain*(this->q.q_4 - q_am.q_4);
+    this->q.q_1 += (q_omega.q_1 * this->deltat * oneMinusGain) - this->gain*(this->q.q_1 - q_am.q_1);
+    this->q.q_2 += (q_omega.q_2 * this->deltat * oneMinusGain) - this->gain*(this->q.q_2 - q_am.q_2);
+    this->q.q_3 += (q_omega.q_3 * this->deltat * oneMinusGain) - this->gain*(this->q.q_3 - q_am.q_3);
+    this->q.q_4 += (q_omega.q_4 * this->deltat * oneMinusGain) - this->gain*(this->q.q_4 - q_am.q_4);
 
     this->q.norm();
 
@@ -52,7 +52,7 @@ void ComplementaryFilter::updateFilter(Vec3 w, Vec3 a, Vec3 m)
 void ComplementaryFilter::updateFilter(Vec3 w, Vec3 a)
 {
     float norm;
-    float oneMinusGain = 1 - gain;
+    float oneMinusGain = 1 - this->gain;
 
     Quaternion q_omega = Quaternion(0, 0, 0, 0);
     Quaternion q_am = Quaternion(0, 0, 0, 0);
@@ -81,10 +81,10 @@ void ComplementaryFilter::updateFilter(Vec3 w, Vec3 a)
     q_omega.q_3 = half_q_1 * w.y - half_q_2 * w.z + half_q_4 * w.x;
     q_omega.q_4 = -half_q_1 * w.z + half_q_2 * w.y - half_q_3 * w.x;
 
-    this->q.q_1 += (q_omega.q_1 * deltat * oneMinusGain) - gain*(this->q.q_1 - q_am.q_1);
-    this->q.q_2 += (q_omega.q_2 * deltat * oneMinusGain) - gain*(this->q.q_2 - q_am.q_2);
-    this->q.q_3 += (q_omega.q_3 * deltat * oneMinusGain) - gain*(this->q.q_3 - q_am.q_3);
-    this->q.q_4 += (q_omega.q_4 * deltat * oneMinusGain) - gain*(this->q.q_4 - q_am.q_4);
+    this->q.q_1 += (q_omega.q_1 * this->deltat * oneMinusGain) - this->gain*(this->q.q_1 - q_am.q_1);
+    this->q.q_2 += (q_omega.q_2 * this->deltat * oneMinusGain) - this->gain*(this->q.q_2 - q_am.q_2);
+    this->q.q_3 += (q_omega.q_3 * this->deltat * oneMinusGain) - this->gain*(this->q.q_3 - q_am.q_3);
+    this->q.q_4 += (q_omega.q_4 * this->deltat * oneMinusGain) - this->gain*(this->q.q_4 - q_am.q_4);
 
     this->q.norm();
 
