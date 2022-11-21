@@ -16,6 +16,7 @@ class Vec3
 
         void norm()
         {
+            // return sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
             float norm = sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
             this->x /= norm;
             this->y /= norm;

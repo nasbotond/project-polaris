@@ -30,6 +30,7 @@ class Quaternion
 
         void norm()
         {
+            // return sqrt(this->q_1*this->q_1 + this->q_2*this->q_2 + this->q_3*this->q_3 + this->q_4*this->q_4);
             float norm = sqrt(this->q_1*this->q_1 + this->q_2*this->q_2 + this->q_3*this->q_3 + this->q_4*this->q_4);
             this->q_1 /= norm;
             this->q_2 /= norm;

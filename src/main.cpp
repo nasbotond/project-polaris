@@ -15,11 +15,13 @@
 #include "comp_filter.hpp"
 #include "csv_reader.hpp"
 #include "animation.hpp"
+#include "metrics.hpp"
 
 int main(int argc, char* argv[])
 {
-    float deltat = 1/280;
+    float deltat = 1.0f/280.0f;
     float compGain = 0.2;
+
     // Input
     ComplementaryFilter comp = ComplementaryFilter(deltat, compGain);
     ComplementaryFilter comp_mag = ComplementaryFilter(deltat, compGain);
@@ -33,6 +35,9 @@ int main(int argc, char* argv[])
     std::ofstream est_madg_no_mag;
     std::ofstream est_comp_mag;
     std::ofstream est_comp_no_mag;
+
+    std::ofstream quat_err;
+    std::ofstream e;
     
     try
     {
@@ -43,8 +48,13 @@ int main(int argc, char* argv[])
         est_comp_mag.open ("../results/est_comp_mag.csv");
         est_comp_no_mag.open ("../results/est_comp_no_mag.csv");
 
+        quat_err.open ("../results/quat_err.csv");
+        e.open ("../results/e.csv");
+
+        float sum = 0.0;
+
         // for (int i = 0; i < 40001; ++i)
-        for (int i = 10000; i < 50001; ++i)
+        for (int i = 10000; i < 45001; ++i)
         {
             // with Magnetometer
             comp_mag.updateFilter(read.w.at(i), read.a.at(i), read.m.at(i));
@@ -58,6 +68,12 @@ int main(int argc, char* argv[])
 
             est_madg_no_mag << madg.q.q_1 << "," << madg.q.q_2 << "," << madg.q.q_3 << "," << madg.q.q_4 << "\n";
             est_comp_no_mag << comp.q.q_1 << "," << comp.q.q_2 << "," << comp.q.q_3 << "," << comp.q.q_4 << "\n";
+
+            Quaternion err_quat = Metrics::error_quaternion(read.gt.at(i), madg_mag.q);
+            quat_err << err_quat.q_1 << "," << err_quat.q_2 << "," << err_quat.q_3 << "," << err_quat.q_4 << "\n";
+            float err = Metrics::angular_dist(err_quat);
+            sum += err;
+            e << err << "\n";
 
             // float mq1 = madg.q_1*1/sqrt(2) - madg.q_4*1/sqrt(2);
             // float mq2 = madg.q_2*1/sqrt(2) - madg.q_3*1/sqrt(2);
@@ -141,10 +157,17 @@ int main(int argc, char* argv[])
         // std::cout << "q3: " << read.gt.at(i)z << std::endl;
         // std::cout << "q4: " << read.gt.at(i).at(3) << std::endl;
 
+        float rmse = sqrt(pow(sum/35001.0f, 2));
+        std::cout << sum << std::endl;
+        std::cout << rmse << std::endl;
+
         est_madg_mag.close();
         est_madg_no_mag.close();
         est_comp_mag.close();
         est_comp_no_mag.close();
+
+        quat_err.close();
+        e.close();
     } 
     catch(const std::exception &e)
     {

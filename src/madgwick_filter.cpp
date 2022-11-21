@@ -1,6 +1,6 @@
 #include "madgwick_filter.hpp"
 
-void MadgwickFilter::updateMARGFilter(Vec3 w, Vec3 a, Vec3 m)
+void MadgwickFilter::updateMARGFilter(Vec3 &w, Vec3 &a, Vec3 &m)
 {
     // local system variables
     float f_1, f_2, f_3, f_4, f_5, f_6;
@@ -16,23 +16,18 @@ void MadgwickFilter::updateMARGFilter(Vec3 w, Vec3 a, Vec3 m)
         updateIMUFilter(w, a);
         return;
     }
-    float q_1q_2;
-    float q_1q_3 = this->q.q_1 * this->q.q_3;
-    float q_1q_4;
-    float q_2q_3;
-    float q_2q_4 = this->q.q_2 * this->q.q_4;
-    float q_3q_4;
+
     float twom_x = 2.0f * m.x;
     float twom_y = 2.0f * m.y;
     float twom_z = 2.0f * m.z;
 
     // compute flux in the earth frame
-    q_1q_2 = this->q.q_1 * this->q.q_2;
-    q_1q_3 = this->q.q_1 * this->q.q_3;
-    q_1q_4 = this->q.q_1 * this->q.q_4;
-    q_3q_4 = this->q.q_3 * this->q.q_4;
-    q_2q_3 = this->q.q_2 * this->q.q_3;
-    q_2q_4 = this->q.q_2 * this->q.q_4;
+    float q_1q_2 = this->q.q_1 * this->q.q_2;
+    float q_1q_3 = this->q.q_1 * this->q.q_3;
+    float q_1q_4 = this->q.q_1 * this->q.q_4;
+    float q_3q_4 = this->q.q_3 * this->q.q_4;
+    float q_2q_3 = this->q.q_2 * this->q.q_3;
+    float q_2q_4 = this->q.q_2 * this->q.q_4;
 
     h_x = twom_x * (0.5f - this->q.q_3 * this->q.q_3 - this->q.q_4 * this->q.q_4) + twom_y * (q_2q_3 - q_1q_4) + twom_z * (q_2q_4 + q_1q_3);
     h_y = twom_x * (q_2q_3 + q_1q_4) + twom_y * (0.5f - this->q.q_2 * this->q.q_2 - this->q.q_4 * this->q.q_4) + twom_z * (q_3q_4 - q_1q_2);
@@ -122,21 +117,21 @@ void MadgwickFilter::updateMARGFilter(Vec3 w, Vec3 a, Vec3 m)
     qDot_omega.q_4 = halfq_1 * w.z + halfq_2 * w.y - halfq_3 * w.x;
 
     // compute then integrate the estimated quaternion rate
-    this->q.q_1 += (qDot_omega.q_1 - (beta * qHatDot.q_1)) * this->deltat;
-    this->q.q_2 += (qDot_omega.q_2 - (beta * qHatDot.q_2)) * this->deltat;
-    this->q.q_3 += (qDot_omega.q_3 - (beta * qHatDot.q_3)) * this->deltat;
-    this->q.q_4 += (qDot_omega.q_4 - (beta * qHatDot.q_4)) * this->deltat;
+    this->q.q_1 += (qDot_omega.q_1 - (beta * qHatDot.q_1)) * deltat;
+    this->q.q_2 += (qDot_omega.q_2 - (beta * qHatDot.q_2)) * deltat;
+    this->q.q_3 += (qDot_omega.q_3 - (beta * qHatDot.q_3)) * deltat;
+    this->q.q_4 += (qDot_omega.q_4 - (beta * qHatDot.q_4)) * deltat;
 
     // normalise quaternion
     this->q.norm();
 
-    // std::cout << "q1: " << q_1 << std::endl;
-    // std::cout << "q2: " << q_2 << std::endl;
-    // std::cout << "q3: " << q_3 << std::endl;
-    // std::cout << "q4: " << q_4 << std::endl;
+    // std::cout << "q1: " << q.q_1 << std::endl;
+    // std::cout << "q2: " << q.q_2 << std::endl;
+    // std::cout << "q3: " << q.q_3 << std::endl;
+    // std::cout << "q4: " << q.q_4 << std::endl;
 }
 
-void MadgwickFilter::updateIMUFilter(Vec3 w, Vec3 a)
+void MadgwickFilter::updateIMUFilter(Vec3 &w, Vec3 &a)
 {
     float q_1 = this->q.q_1;
     float q_2 = this->q.q_2;
@@ -184,10 +179,10 @@ void MadgwickFilter::updateIMUFilter(Vec3 w, Vec3 a)
     qDot_omega.q_3 = halfq_1 * w.y - halfq_2 * w.z + halfq_4 * w.x;
     qDot_omega.q_4 = halfq_1 * w.z + halfq_2 * w.y - halfq_3 * w.x;
 
-    this->q.q_1 += (qDot_omega.q_1 - (beta * qHatDot.q_1)) * this->deltat;
-    this->q.q_2 += (qDot_omega.q_2 - (beta * qHatDot.q_2)) * this->deltat;
-    this->q.q_3 += (qDot_omega.q_3 - (beta * qHatDot.q_3)) * this->deltat;
-    this->q.q_4 += (qDot_omega.q_4 - (beta * qHatDot.q_4)) * this->deltat;
+    this->q.q_1 += (qDot_omega.q_1 - (beta * qHatDot.q_1)) * deltat;
+    this->q.q_2 += (qDot_omega.q_2 - (beta * qHatDot.q_2)) * deltat;
+    this->q.q_3 += (qDot_omega.q_3 - (beta * qHatDot.q_3)) * deltat;
+    this->q.q_4 += (qDot_omega.q_4 - (beta * qHatDot.q_4)) * deltat;
 
     this->q.norm();
 
