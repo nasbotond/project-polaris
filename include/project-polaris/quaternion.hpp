@@ -15,26 +15,26 @@ class Quaternion
 
         float roll()
         {
-            return atan2(2*this->q_3*this->q_4-2*this->q_1*this->q_2, 2*this->q_1*this->q_1 + 2*this->q_4*this->q_4-1);
+            return atan2(2*q_3*q_4-2*q_1*q_2, 2*q_1*q_1 + 2*q_4*q_4-1);
         }
 
         float pitch()
         {
-            return -asin(2*this->q_2*this->q_4+2*this->q_1*this->q_3);
+            return -asin(2*q_2*q_4+2*q_1*q_3);
         }
 
         float yaw()
         {
-            return atan2(2*this->q_3*this->q_4-2*this->q_1*this->q_2, 2*this->q_1*this->q_1 + 2*this->q_4*this->q_4-1);
+            return atan2(2*q_3*q_4-2*q_1*q_2, 2*q_1*q_1 + 2*q_4*q_4-1);
         }
 
         void norm()
         {
-            // return sqrt(this->q_1*this->q_1 + this->q_2*this->q_2 + this->q_3*this->q_3 + this->q_4*this->q_4);
-            float norm = sqrt(this->q_1*this->q_1 + this->q_2*this->q_2 + this->q_3*this->q_3 + this->q_4*this->q_4);
-            this->q_1 /= norm;
-            this->q_2 /= norm;
-            this->q_3 /= norm;
-            this->q_4 /= norm;
+            // return sqrt(q_1*q_1 + q_2*q_2 + q_3*q_3 + q_4*q_4);
+            float norm = sqrt(q_1*q_1 + q_2*q_2 + q_3*q_3 + q_4*q_4);
+            q_1 /= norm;
+            q_2 /= norm;
+            q_3 /= norm;
+            q_4 /= norm;
         }
 };

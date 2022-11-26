@@ -8,14 +8,14 @@
 void CsvReader::retrieveFileItems()
 {
     std::fstream afile("../test_data/imu_acc.csv", std::ios::in);
-    // std::fstream afile(this->sPath, std::ios::in);
+    // std::fstream afile(sPath, std::ios::in);
     std::string aline;
     if (afile.is_open())
     {
         while (getline(afile, aline))
         {
-            std::vector<float> a = split(aline, ',');
-            this->a.push_back(Vec3(a.at(0), a.at(1), a.at(2)));
+            std::vector<float> a_split = split(aline, ',');
+            a.push_back(Vec3(a_split.at(0), a_split.at(1), a_split.at(2)));
         }
     }
     else
@@ -29,8 +29,8 @@ void CsvReader::retrieveFileItems()
     {
         while (getline(wfile, gline))
         {
-            std::vector<float> g = split(gline, ',');
-            this->w.push_back(Vec3(g.at(0), g.at(1), g.at(2)));
+            std::vector<float> g_split = split(gline, ',');
+            w.push_back(Vec3(g_split.at(0), g_split.at(1), g_split.at(2)));
         }
     }
     else
@@ -44,8 +44,8 @@ void CsvReader::retrieveFileItems()
     {
         while (getline(mfile, mline))
         {
-            std::vector<float> m = split(mline, ',');
-            this->m.push_back(Vec3(m.at(0), m.at(1), m.at(2)));
+            std::vector<float> m_split = split(mline, ',');
+            m.push_back(Vec3(m_split.at(0), m_split.at(1), m_split.at(2)));
         }
     }
     else
@@ -59,8 +59,8 @@ void CsvReader::retrieveFileItems()
     {
         while (getline(file, line))
         {
-            std::vector<float> gt = split(line, ',');
-            this->gt.push_back(Quaternion(gt.at(0), gt.at(1), gt.at(2), gt.at(3)));
+            std::vector<float> gt_split = split(line, ',');
+            gt.push_back(Quaternion(gt_split.at(0), gt_split.at(1), gt_split.at(2), gt_split.at(3)));
         }
     }
     else

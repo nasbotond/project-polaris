@@ -8,10 +8,10 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
     Quaternion q_omega = Quaternion(0, 0, 0, 0);
     Quaternion q_am = Quaternion(0, 0, 0, 0);
 
-    float half_q_1 = 0.5f * this->q.q_1;
-    float half_q_2 = 0.5f * this->q.q_2;
-    float half_q_3 = 0.5f * this->q.q_3;
-    float half_q_4 = 0.5f * this->q.q_4;
+    float half_q_1 = 0.5 * q.q_1;
+    float half_q_2 = 0.5 * q.q_2;
+    float half_q_3 = 0.5 * q.q_3;
+    float half_q_4 = 0.5 * q.q_4;
 
     float phi = atan2(a.y, a.z); // roll
     float theta = atan2(-a.x, sqrt((a.y*a.y + a.z*a.z))); // pitch
@@ -22,10 +22,10 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
     
     float psi = atan2(-b_y, b_x); // yaw
 
-    q_am.q_1 = cos(0.5f*theta)*cos(0.5f*phi)*cos(0.5f*psi) + sin(0.5f*theta)*sin(0.5f*phi)*sin(0.5f*psi);
-    q_am.q_2 = sin(0.5f*theta)*cos(0.5f*phi)*cos(0.5f*psi) - cos(0.5f*theta)*sin(0.5f*phi)*sin(0.5f*psi);
-    q_am.q_3 = cos(0.5f*theta)*sin(0.5f*phi)*cos(0.5f*psi) + sin(0.5f*theta)*cos(0.5f*phi)*sin(0.5f*psi);
-    q_am.q_4 = cos(0.5f*theta)*cos(0.5f*phi)*sin(0.5f*psi) - sin(0.5f*theta)*sin(0.5f*phi)*cos(0.5f*psi);
+    q_am.q_1 = cos(0.5*theta)*cos(0.5*phi)*cos(0.5*psi) + sin(0.5*theta)*sin(0.5*phi)*sin(0.5*psi);
+    q_am.q_2 = sin(0.5*theta)*cos(0.5*phi)*cos(0.5*psi) - cos(0.5*theta)*sin(0.5*phi)*sin(0.5*psi);
+    q_am.q_3 = cos(0.5*theta)*sin(0.5*phi)*cos(0.5*psi) + sin(0.5*theta)*cos(0.5*phi)*sin(0.5*psi);
+    q_am.q_4 = cos(0.5*theta)*cos(0.5*phi)*sin(0.5*psi) - sin(0.5*theta)*sin(0.5*phi)*cos(0.5*psi);
 
     // q_omega_1 = 1 - deltat*(half_q_2 * w_x - half_q_3 * w_y - half_q_4 * w_z);
     // q_omega_2 = 1 + deltat*(half_q_1 * w_x + half_q_3 * w_z - half_q_4 * w_y);
@@ -36,12 +36,12 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
     q_omega.q_3 = half_q_1 * w.y - half_q_2 * w.z + half_q_4 * w.x;
     q_omega.q_4 = -half_q_1 * w.z + half_q_2 * w.y - half_q_3 * w.x;
 
-    this->q.q_1 += (q_omega.q_1 * deltat * oneMinusGain) - gain*(this->q.q_1 - q_am.q_1);
-    this->q.q_2 += (q_omega.q_2 * deltat * oneMinusGain) - gain*(this->q.q_2 - q_am.q_2);
-    this->q.q_3 += (q_omega.q_3 * deltat * oneMinusGain) - gain*(this->q.q_3 - q_am.q_3);
-    this->q.q_4 += (q_omega.q_4 * deltat * oneMinusGain) - gain*(this->q.q_4 - q_am.q_4);
+    q.q_1 += (q_omega.q_1 * deltat * oneMinusGain) - gain*(q.q_1 - q_am.q_1);
+    q.q_2 += (q_omega.q_2 * deltat * oneMinusGain) - gain*(q.q_2 - q_am.q_2);
+    q.q_3 += (q_omega.q_3 * deltat * oneMinusGain) - gain*(q.q_3 - q_am.q_3);
+    q.q_4 += (q_omega.q_4 * deltat * oneMinusGain) - gain*(q.q_4 - q_am.q_4);
 
-    this->q.norm();
+    q.norm();
 
     // std::cout << "q1: " << q_1 << std::endl;
     // std::cout << "q2: " << q_2 << std::endl;
@@ -57,20 +57,20 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a)
     Quaternion q_omega = Quaternion(0, 0, 0, 0);
     Quaternion q_am = Quaternion(0, 0, 0, 0);
 
-    float half_q_1 = 0.5f * this->q.q_1;
-    float half_q_2 = 0.5f * this->q.q_2;
-    float half_q_3 = 0.5f * this->q.q_3;
-    float half_q_4 = 0.5f * this->q.q_4;
+    float half_q_1 = 0.5 * q.q_1;
+    float half_q_2 = 0.5 * q.q_2;
+    float half_q_3 = 0.5 * q.q_3;
+    float half_q_4 = 0.5 * q.q_4;
 
     float phi = atan2(a.y, a.z); // roll
     float theta = atan2(-a.x, sqrt((a.y*a.y + a.z*a.z))); // pitch
     
     float psi = 0; // yaw
 
-    q_am.q_1 = cos(0.5f*theta)*cos(0.5f*phi)*cos(0.5f*psi) + sin(0.5f*theta)*sin(0.5f*phi)*sin(0.5f*psi);
-    q_am.q_2 = sin(0.5f*theta)*cos(0.5f*phi)*cos(0.5f*psi) - cos(0.5f*theta)*sin(0.5f*phi)*sin(0.5f*psi);
-    q_am.q_3 = cos(0.5f*theta)*sin(0.5f*phi)*cos(0.5f*psi) + sin(0.5f*theta)*cos(0.5f*phi)*sin(0.5f*psi);
-    q_am.q_4 = cos(0.5f*theta)*cos(0.5f*phi)*sin(0.5f*psi) - sin(0.5f*theta)*sin(0.5f*phi)*cos(0.5f*psi);
+    q_am.q_1 = cos(0.5*theta)*cos(0.5*phi)*cos(0.5*psi) + sin(0.5*theta)*sin(0.5*phi)*sin(0.5*psi);
+    q_am.q_2 = sin(0.5*theta)*cos(0.5*phi)*cos(0.5*psi) - cos(0.5*theta)*sin(0.5*phi)*sin(0.5*psi);
+    q_am.q_3 = cos(0.5*theta)*sin(0.5*phi)*cos(0.5*psi) + sin(0.5*theta)*cos(0.5*phi)*sin(0.5*psi);
+    q_am.q_4 = cos(0.5*theta)*cos(0.5*phi)*sin(0.5*psi) - sin(0.5*theta)*sin(0.5*phi)*cos(0.5*psi);
 
     // q_omega_1 = 1 - deltat*(half_q_2 * w_x - half_q_3 * w_y - half_q_4 * w_z);
     // q_omega_2 = 1 + deltat*(half_q_1 * w_x + half_q_3 * w_z - half_q_4 * w_y);
@@ -81,12 +81,12 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a)
     q_omega.q_3 = half_q_1 * w.y - half_q_2 * w.z + half_q_4 * w.x;
     q_omega.q_4 = -half_q_1 * w.z + half_q_2 * w.y - half_q_3 * w.x;
 
-    this->q.q_1 += (q_omega.q_1 * deltat * oneMinusGain) - gain*(this->q.q_1 - q_am.q_1);
-    this->q.q_2 += (q_omega.q_2 * deltat * oneMinusGain) - gain*(this->q.q_2 - q_am.q_2);
-    this->q.q_3 += (q_omega.q_3 * deltat * oneMinusGain) - gain*(this->q.q_3 - q_am.q_3);
-    this->q.q_4 += (q_omega.q_4 * deltat * oneMinusGain) - gain*(this->q.q_4 - q_am.q_4);
+    q.q_1 += (q_omega.q_1 * deltat * oneMinusGain) - gain*(q.q_1 - q_am.q_1);
+    q.q_2 += (q_omega.q_2 * deltat * oneMinusGain) - gain*(q.q_2 - q_am.q_2);
+    q.q_3 += (q_omega.q_3 * deltat * oneMinusGain) - gain*(q.q_3 - q_am.q_3);
+    q.q_4 += (q_omega.q_4 * deltat * oneMinusGain) - gain*(q.q_4 - q_am.q_4);
 
-    this->q.norm();
+    q.norm();
 
     // std::cout << "q1: " << q_1 << std::endl;
     // std::cout << "q2: " << q_2 << std::endl;
