@@ -41,7 +41,19 @@ namespace Metrics
 
     float total_error(const Quaternion &error_q)
     {
-        return 2.0f*acos(abs(error_q.q_1));
+        float x = abs(error_q.q_1);
+        if (x<=-1.0) 
+        {
+            return 2.0 * M_PI;
+        } 
+        else if (x>=1.0)
+        {
+            return 0;
+        } 
+        else 
+        {
+            return 2.0 * acos(x);
+        }
     }
 
     float heading_error(const Quaternion &error_q)
@@ -51,7 +63,40 @@ namespace Metrics
 
     float inclination_error(const Quaternion &error_q)
     {
-        return 2.0f * acos(sqrt(error_q.q_1*error_q.q_1 + error_q.q_4*error_q.q_4));
+        float x = sqrt((error_q.q_1*error_q.q_1) + (error_q.q_4*error_q.q_4));
+        if (x<=-1.0) 
+        {
+            return 2 * M_PI;
+        } 
+        else if (x>=1.0)
+        {
+            return 0;
+        } 
+        else 
+        {
+            return 2.0 * acos(x);
+        }
+    }
+
+    float euler_roll_diff(Quaternion &gt, Quaternion &est)
+    {
+        float roll_gt = gt.roll();
+        float roll_est = est.roll();
+        return (roll_gt - roll_est)*180/M_PI;
+    }
+
+    float euler_pitch_diff(Quaternion &gt, Quaternion &est)
+    {
+        float pitch_gt = gt.pitch();
+        float pitch_est = est.pitch();
+        return (pitch_gt - pitch_est)*180/M_PI;
+    }
+
+    float euler_yaw_diff(Quaternion &gt, Quaternion &est)
+    {
+        float yaw_gt = gt.yaw();
+        float yaw_est = est.yaw();
+        return (yaw_gt - yaw_est)*180/M_PI;
     }
     
     void RMSE()

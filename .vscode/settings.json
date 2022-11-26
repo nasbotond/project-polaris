@@ -91,6 +91,12 @@
         "filesystem": "cpp",
         "*.ipp": "cpp",
         "shared_mutex": "cpp",
-        "strstream": "cpp"
+        "strstream": "cpp",
+        "any": "cpp",
+        "csignal": "cpp",
+        "future": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "valarray": "cpp"
     }
 }

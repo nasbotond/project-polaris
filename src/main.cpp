@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
 
     std::ofstream quat_err;
     std::ofstream e;
+    std::ofstream euler_diff;
     
     try
     {
@@ -51,19 +52,23 @@ int main(int argc, char* argv[])
         quat_err.open ("../results/quat_err.csv");
         e.open ("../results/e.csv");
 
-        float sum = 0.0;
-        float sum_inc = 0.0;
-        float sum_head = 0.0;
+        euler_diff.open ("../results/euler_diff.csv");
 
-        // for (int i = 0; i < 40001; ++i)
+        double sum = 0.0;
+        double sum_inc = 0.0;
+        double sum_head = 0.0;
+
+        // for (int i = 10000; i < 10005; ++i)
         for (int i = 10000; i < 45001; ++i)
+        // for (int i = 10000; i < 11801; ++i)
+        // for (int i = 10000; i < 41795; ++i)
         {
             // with Magnetometer
-            comp_mag.updateFilter(read.w.at(i), read.a.at(i), read.m.at(i));
+            // comp_mag.updateFilter(read.w.at(i), read.a.at(i), read.m.at(i));
             madg_mag.updateMARGFilter(read.w.at(i), read.a.at(i), read.m.at(i));
             // without Magnetometer
-            comp.updateFilter(read.w.at(i), read.a.at(i));
-            madg.updateIMUFilter(read.w.at(i), read.a.at(i));
+            // comp.updateFilter(read.w.at(i), read.a.at(i));
+            // madg.updateIMUFilter(read.w.at(i), read.a.at(i));
 
             est_madg_mag << madg_mag.q.q_1 << "," << madg_mag.q.q_2 << "," << madg_mag.q.q_3 << "," << madg_mag.q.q_4 << "\n";
             est_comp_mag << comp_mag.q.q_1 << "," << comp_mag.q.q_2 << "," << comp_mag.q.q_3 << "," << comp_mag.q.q_4 << "\n";
@@ -71,16 +76,34 @@ int main(int argc, char* argv[])
             est_madg_no_mag << madg.q.q_1 << "," << madg.q.q_2 << "," << madg.q.q_3 << "," << madg.q.q_4 << "\n";
             est_comp_no_mag << comp.q.q_1 << "," << comp.q.q_2 << "," << comp.q.q_3 << "," << comp.q.q_4 << "\n";
 
-            Quaternion err_quat = Metrics::error_quaternion(read.gt.at(i), madg_mag.q);
-            Quaternion err_quat_1 = Metrics::error_quaternion_earth(read.gt.at(i), madg_mag.q);
+
+            Quaternion enu_est = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), madg_mag.q);
+            // std::cout << read.gt.at(i).q_1 << "," << read.gt.at(i).q_2 << "," << read.gt.at(i).q_3 << "," << read.gt.at(i).q_4 << std::endl;
+            // std::cout << madg_mag.q.q_1 << "," << madg_mag.q.q_2 << "," << madg_mag.q.q_3 << "," << madg_mag.q.q_4 << std::endl;
+            // std::cout << enu_est.q_1 << "," << enu_est.q_2 << "," << enu_est.q_3 << "," << enu_est.q_4 << std::endl;
+            // Quaternion err_quat = Metrics::error_quaternion(read.gt.at(i), madg_mag.q);
+            // Quaternion err_quat = Metrics::error_quaternion_earth(read.gt.at(i), madg_mag.q);
+            // Quaternion err_quat = Metrics::error_quaternion(read.gt.at(i), enu_est);
+            Quaternion err_quat = Metrics::error_quaternion_earth(read.gt.at(i), enu_est);
             quat_err << err_quat.q_1 << "," << err_quat.q_2 << "," << err_quat.q_3 << "," << err_quat.q_4 << "\n";
-            float err = Metrics::total_error(err_quat);
-            float err_inc = Metrics::inclination_error(err_quat_1);
-            float err_head = Metrics::heading_error(err_quat_1);
+            double err = Metrics::total_error(err_quat);
+            double err_inc = Metrics::inclination_error(err_quat);
+            double err_head = Metrics::heading_error(err_quat);
+
             sum += err*err;
             sum_inc += err_inc*err_inc;
             sum_head += err_head*err_head;
+
             e << err << "," << err_inc << "," << err_head << "\n";
+
+            // float roll_diff = Metrics::euler_roll_diff(read.gt.at(i), madg_mag.q);
+            // float pitch_diff = Metrics::euler_pitch_diff(read.gt.at(i), madg_mag.q);
+            // float yaw_diff = Metrics::euler_yaw_diff(read.gt.at(i), madg_mag.q);
+            float roll_diff = Metrics::euler_roll_diff(read.gt.at(i), enu_est);
+            float pitch_diff = Metrics::euler_pitch_diff(read.gt.at(i), enu_est);
+            float yaw_diff = Metrics::euler_yaw_diff(read.gt.at(i), enu_est);
+
+            euler_diff << roll_diff << "," << pitch_diff << "," << yaw_diff << "\n";
 
             // float mq1 = madg.q_1*1/sqrt(2) - madg.q_4*1/sqrt(2);
             // float mq2 = madg.q_2*1/sqrt(2) - madg.q_3*1/sqrt(2);
@@ -112,8 +135,12 @@ int main(int argc, char* argv[])
         float rmse = sqrt(sum/35001.0f);
         float rmse_inc = sqrt(sum_inc/35001.0f);
         float rmse_head = sqrt(sum_head/35001.0f);
+        // float rmse = sqrt(sum/1801.0f);
+        // float rmse_inc = sqrt(sum_inc/1801.0f);
+        // float rmse_head = sqrt(sum_head/1801.0f);
         std::cout << sum << std::endl;
         std::cout << rmse << std::endl;
+        // std::cout << sum_inc << std::endl;
         std::cout << rmse_inc << std::endl;
         std::cout << rmse_head << std::endl;
 
@@ -124,6 +151,8 @@ int main(int argc, char* argv[])
 
         quat_err.close();
         e.close();
+
+        euler_diff.close();
     } 
     catch(const std::exception &e)
     {
