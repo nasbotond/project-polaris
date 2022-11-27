@@ -30,6 +30,7 @@ class ComplementaryFilter
         void updateFilter(const Vec3 &w, const Vec3 &a);
 
         // Helper functions
+        float sgn(float v);
 
         // Variables
         Quaternion q;

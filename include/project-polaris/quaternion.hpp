@@ -15,17 +15,17 @@ class Quaternion
 
         float roll()
         {
-            return atan2(2*q_3*q_4-2*q_1*q_2, 2*q_1*q_1 + 2*q_4*q_4-1);
+            return atan2(2*q_3*q_4 - 2*q_1*q_2, 2*q_1*q_1 + 2*q_4*q_4 - 1);
         }
 
         float pitch()
         {
-            return -asin(2*q_2*q_4+2*q_1*q_3);
+            return -asin(2*q_2*q_4 + 2*q_1*q_3);
         }
 
         float yaw()
         {
-            return atan2(2*q_3*q_4-2*q_1*q_2, 2*q_1*q_1 + 2*q_4*q_4-1);
+            return atan2(2*q_2*q_3 - 2*q_1*q_4, 2*q_1*q_1 + 2*q_2*q_2 - 1);
         }
 
         void norm()

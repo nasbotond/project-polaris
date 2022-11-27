@@ -29,6 +29,8 @@ class CsvReader
         // Main functions
         void retrieveFileItems();
 
+        std::vector<Vec3> getRMSE();
+
         // Helper functions
         std::vector<float> split(const std::string &s, char delim) const;
 
