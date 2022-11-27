@@ -34,7 +34,7 @@ class Metrics
 
         static Quaternion error_quaternion_earth(Quaternion &gt, Quaternion &est)
         {
-            // Make sure estimated quaternion is in ENU frame
+            // Make sure earth frame is in ENU
             Quaternion est_enu = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2.0), 0.0, 0.0, 1.0/sqrt(2.0)), est);
             Quaternion gt_inv = inv(gt);
             Quaternion error_q = hamiltonProduct(est_enu, gt_inv);
@@ -44,19 +44,7 @@ class Metrics
 
         static float total_error(const Quaternion &error_q)
         {
-            float x = abs(error_q.q_1);
-            if (x <= -1.0) 
-            {
-                return 2.0 * M_PI;
-            } 
-            else if (x >= 1.0)
-            {
-                return 0;
-            } 
-            else 
-            {
-                return 2.0 * acos(x);
-            }
+            return 2.0 * acos(std::clamp(abs(error_q.q_1), -1.0f, 1.0f));
         }
 
         static float heading_error(const Quaternion &error_q)
@@ -66,19 +54,7 @@ class Metrics
 
         static float inclination_error(const Quaternion &error_q)
         {
-            float x = sqrt((error_q.q_1*error_q.q_1) + (error_q.q_4*error_q.q_4));
-            if (x <= -1.0) 
-            {
-                return 2.0 * M_PI;
-            } 
-            else if (x >= 1.0)
-            {
-                return 0;
-            } 
-            else 
-            {
-                return 2.0 * acos(x);
-            }
+            return 2.0 * acos(std::clamp(sqrt((error_q.q_1*error_q.q_1) + (error_q.q_4*error_q.q_4)), -1.0f, 1.0f));
         }
 
         static float euler_roll_diff(Quaternion &gt, Quaternion &est)
@@ -100,10 +76,5 @@ class Metrics
             float yaw_gt = gt.yaw();
             float yaw_est = est.yaw();
             return (yaw_gt - yaw_est)*180/M_PI;
-        }
-        
-        void RMSE()
-        {
-
         }
 };
