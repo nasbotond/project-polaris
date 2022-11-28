@@ -272,6 +272,9 @@ int main(int argc, char* argv[])
     bool vtk_2_open = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    bool isPlaying = false;
+    bool isManuelPlayback = true;
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -339,6 +342,9 @@ int main(int argc, char* argv[])
         ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
         if (vtk_2_open)
         {
+            static bool loop = false;
+            static int vectorIndex = 0;
+
             ImGui::Begin("Vtk Viewer 2", &vtk_2_open, VtkViewer::NoScrollFlags());
 
             // Other widgets can be placed in the same window as the VTKViewer
@@ -352,39 +358,93 @@ int main(int argc, char* argv[])
             {
                 renderer->SetBackground(0, 0, 0);
             }
-            ImGui::SameLine();
-            if (ImGui::Button("VTK Background: Red"))
-            {
-                renderer->SetBackground(1, 0, 0);
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("VTK Background: Green"))
-            {
-                renderer->SetBackground(0, 1, 0);
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("VTK Background: Blue"))
-            {
-                renderer->SetBackground(0, 0, 1);
-            }
+            // ImGui::SameLine();
+            // if (ImGui::Button("VTK Background: Red"))
+            // {
+            //     renderer->SetBackground(1, 0, 0);
+            // }
+            // ImGui::SameLine();
+            // if (ImGui::Button("VTK Background: Green"))
+            // {
+            //     renderer->SetBackground(0, 1, 0);
+            // }
+            // ImGui::SameLine();
+            // if (ImGui::Button("VTK Background: Blue"))
+            // {
+            //     renderer->SetBackground(0, 0, 1);
+            // }
 
             static float vtk2BkgAlpha = 0.2f;
             ImGui::SliderFloat("Background Alpha", &vtk2BkgAlpha, 0.0f, 1.0f);
             renderer->SetBackgroundAlpha(vtk2BkgAlpha);
 
-             static int vectorIndex = 0;
-            if(ImGui::SliderInt("Vector Index", &vectorIndex, 0, gravity_vectors.size()))
+            if(isManuelPlayback)
             {
-                vtkViewer2.removeActor(actor);
-                vtkViewer2.removeActor(planeActor);
-                actor = getArrowActor(gravity_vectors.at(vectorIndex));
-                planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
-                vtkViewer2.addActor(actor);
-                vtkViewer2.addActor(planeActor);
+                if(ImGui::SliderInt("Vector Index", &vectorIndex, 0, gravity_vectors.size()-1))
+                {
+                    vtkViewer2.removeActor(actor);
+                    vtkViewer2.removeActor(planeActor);
+                    actor = getArrowActor(gravity_vectors.at(vectorIndex));
+                    planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
+                    vtkViewer2.addActor(actor);
+                    vtkViewer2.addActor(planeActor);
+                }
+
+                ImGui::Checkbox("Loop", &loop);
+                if(isPlaying)
+                {
+                    if (ImGui::Button("Stop")) 
+                    {
+                        isPlaying = false;
+                    }
+                }
+                else if(ImGui::Button("Play"))
+                {
+                    isPlaying = true;
+                }
+
+                if(ImGui::Button("Next Index"))
+                {
+                    if(vectorIndex >= gravity_vectors.size()-1) 
+                    {
+                        vectorIndex = 0;
+                        vtkViewer2.removeActor(actor);
+                        vtkViewer2.removeActor(planeActor);
+                        actor = getArrowActor(gravity_vectors.at(vectorIndex));
+                        planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
+                        vtkViewer2.addActor(actor);
+                        vtkViewer2.addActor(planeActor);
+                    }
+                    else
+                    {
+                        vectorIndex++;
+                        vtkViewer2.removeActor(actor);
+                        vtkViewer2.removeActor(planeActor);
+                        actor = getArrowActor(gravity_vectors.at(vectorIndex));
+                        planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
+                        vtkViewer2.addActor(actor);
+                        vtkViewer2.addActor(planeActor);
+                    }
+                }
             }
 
-            if(ImGui::Button("Next Index"))
+            if(isPlaying)
             {
+                if(vectorIndex >= gravity_vectors.size()-1) 
+                {
+                    if(!loop)
+                    {
+                        isPlaying = false;
+                    }
+
+                    vectorIndex = 0;
+                    vtkViewer2.removeActor(actor);
+                    vtkViewer2.removeActor(planeActor);
+                    actor = getArrowActor(gravity_vectors.at(vectorIndex));
+                    planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
+                    vtkViewer2.addActor(actor);
+                    vtkViewer2.addActor(planeActor);
+                }
                 vectorIndex++;
                 vtkViewer2.removeActor(actor);
                 vtkViewer2.removeActor(planeActor);
@@ -393,7 +453,7 @@ int main(int argc, char* argv[])
                 vtkViewer2.addActor(actor);
                 vtkViewer2.addActor(planeActor);
             }
-
+            
             vtkViewer2.render();
 
             ImGui::End();
