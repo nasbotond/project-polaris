@@ -30,7 +30,10 @@ static vtkSmartPointer<vtkActor> getArrowActor(std::vector<double> vector)
     // Generate a random start and end point
     double startPoint[3] = {0, 0, 0};
     // double endPoint[3] = {0.0, 0.0, 1.0};
-    double endPoint[3] = {vector.at(0), vector.at(1), vector.at(2)};
+    float x = -sin(vector.at(1));
+    float y = cos(vector.at(1))*sin(vector.at(0));
+    float z = -cos(vector.at(1))*cos(vector.at(0));
+    double endPoint[3] = {x, y, z};
     vtkNew<vtkMinimalStandardRandomSequence> rng;
 
     // Compute a basis
@@ -96,7 +99,12 @@ static vtkSmartPointer<vtkActor> getPlaneActor(std::vector<double> vector)
     planeSource->SetPoint1(0.5, 0.0, 0.0);
     planeSource->SetPoint2(0.0, 0.25, 0.0);
     planeSource->SetCenter(0.0, 0.0, 0.0);
-    planeSource->SetNormal(vector.at(0), vector.at(1), vector.at(2));    
+
+    float x = -sin(vector.at(1));
+    float y = cos(vector.at(1))*sin(vector.at(0));
+    float z = -cos(vector.at(1))*cos(vector.at(0));
+    
+    planeSource->SetNormal(x, y, z);    
     planeSource->Update();
 
     vtkSmartPointer<vtkPolyData> plane = planeSource->GetOutput();

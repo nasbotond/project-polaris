@@ -117,7 +117,6 @@ VtkViewer& VtkViewer::operator=(const VtkViewer& vtkViewer)
 
 void VtkViewer::init()
 {
-
 	renderer = vtkSmartPointer<vtkRenderer>::New();
 	renderer->ResetCamera();
 	renderer->SetBackground(DEFAULT_BACKGROUND);

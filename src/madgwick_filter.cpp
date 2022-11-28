@@ -10,7 +10,6 @@ void MadgwickFilter::setInitialState(Quaternion &initial)
 
 void MadgwickFilter::updateMARGFilter(Vec3 &w, Vec3 &a, Vec3 &m)
 {
-    // local system variables
     float f_1, f_2, f_3, f_4, f_5, f_6;
     float J_11or24, J_12or23, J_13or22, J_41, J_42, J_43, J_44, J_51, J_52, J_14or21, J_32, J_33, J_53, J_54, J_61, J_62, J_63, J_64;
     float w_err_x, w_err_y, w_err_z;
@@ -53,10 +52,6 @@ void MadgwickFilter::updateMARGFilter(Vec3 &w, Vec3 &a, Vec3 &m)
 
     if(!((a.x == 0.0) && (a.y == 0.0) && (a.z == 0.0))) 
     {
-        // std::cout << "ax: " << a.x << std::endl;
-        // std::cout << "ay: " << a.y << std::endl;
-        // std::cout << "az: " << a.z << std::endl;
-
         a.norm();
         m.norm();
 
@@ -123,11 +118,6 @@ void MadgwickFilter::updateMARGFilter(Vec3 &w, Vec3 &a, Vec3 &m)
 
     // normalise quaternion
     q.norm();
-
-    // std::cout << "q1: " << q.q_1 << std::endl;
-    // std::cout << "q2: " << q.q_2 << std::endl;
-    // std::cout << "q3: " << q.q_3 << std::endl;
-    // std::cout << "q4: " << q.q_4 << std::endl;
 
     // recompute flux in the earth frame with new q
     q_1q_2 = q.q_1 * q.q_2;
