@@ -5,8 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include/project-polaris/**",
-                "/opt/homebrew/Cellar/**",
-                "${workspaceFolder}/include/project-polaris"
+                "/opt/homebrew/Cellar/vtk/9.2.2/**"
             ],
             "defines": [],
             "macFrameworkPath": [],

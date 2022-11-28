@@ -1,11 +1,3 @@
-#ifdef _WIN32
-#include <Windows.h>
-#else
-#include <unistd.h>
-#endif
-
-#include "opencv2/opencv.hpp"
-#include <opencv2/imgproc.hpp>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
