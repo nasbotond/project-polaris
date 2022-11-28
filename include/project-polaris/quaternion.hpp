@@ -4,6 +4,7 @@
 #include <sstream>
 #include <numeric>
 #include <math.h>
+#include "vec3.hpp"
 
 class Quaternion
 {
@@ -36,5 +37,30 @@ class Quaternion
             q_2 /= norm;
             q_3 /= norm;
             q_4 /= norm;
+        }
+
+        static Quaternion getOrientationFromAccMag(Vec3 &a, Vec3 &m)
+        {
+            Vec3 z = a;
+            Vec3 m_inv = Vec3(-m.x, -m.y, -m.z);
+            Vec3 tmp = Vec3::cross(z, m_inv);
+            Vec3 x = Vec3::cross(tmp, z);
+            Vec3 y = Vec3::cross(z, x);
+            x.norm();
+            y.norm();
+            z.norm();
+
+            float w_sq = (1.0 + x.x + y.y + z.z) / 4.0;
+            float x_sq = (1.0 + x.x - y.y - z.z) / 4.0;
+            float y_sq = (1.0 - x.x + y.y - z.z) / 4.0;
+            float z_sq = (1.0 - x.x - y.y + z.z) / 4.0;
+
+            Quaternion result = Quaternion(0, 0, 0, 0);
+            result.q_1 = sqrt(w_sq);
+            result.q_2 = (y.z - z.y)/abs(y.z - z.y) * sqrt(x_sq);
+            result.q_3 = (z.x - x.z)/abs(z.x - x.z) * sqrt(y_sq);
+            result.q_4 = (x.y - y.x)/abs(x.y - y.x) * sqrt(z_sq);
+
+            return result;
         }
 };

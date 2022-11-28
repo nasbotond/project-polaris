@@ -1,5 +1,13 @@
 #include "madgwick_filter.hpp"
 
+void MadgwickFilter::setInitialState(Quaternion &initial)
+{
+    q.q_1 = initial.q_1;
+    q.q_2 = initial.q_2;
+    q.q_3 = initial.q_3;
+    q.q_4 = initial.q_4;
+}
+
 void MadgwickFilter::updateMARGFilter(Vec3 &w, Vec3 &a, Vec3 &m)
 {
     // local system variables

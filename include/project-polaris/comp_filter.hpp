@@ -7,6 +7,7 @@
 #include <numeric>
 #include <vector>
 #include <math.h>
+#include <algorithm>
 #include "quaternion.hpp"
 #include "vec3.hpp"
 #define PI 3.14159265
@@ -29,6 +30,7 @@ class ComplementaryFilter
 
         // Helper functions
         float sgn(float v);
+        void setInitialState(Quaternion &initial);
 
         // Variables
         Quaternion q;

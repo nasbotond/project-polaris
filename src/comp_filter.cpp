@@ -1,5 +1,13 @@
 #include "comp_filter.hpp"
 
+void ComplementaryFilter::setInitialState(Quaternion &initial)
+{
+    q.q_1 = initial.q_1;
+    q.q_2 = initial.q_2;
+    q.q_3 = initial.q_3;
+    q.q_4 = initial.q_4;
+}
+
 void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 &m)
 {
     float norm;

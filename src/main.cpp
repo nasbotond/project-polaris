@@ -77,9 +77,11 @@ int main(int argc, char* argv[])
 
         // euler_diff.open ("../results/euler_diff.csv");
 
-        double sum = 0.0;
-        double sum_inc = 0.0;
-        double sum_head = 0.0;
+        Quaternion initial_state = Quaternion::getOrientationFromAccMag(read.a.at(9999), read.m.at(9999));
+        comp_mag.setInitialState(initial_state);
+        madg_mag.setInitialState(initial_state);
+        comp.setInitialState(initial_state);
+        madg.setInitialState(initial_state);
 
         // for (int i = 0; i < read.a.size(); ++i)
         for (int i = 10000; i < 45001; ++i)

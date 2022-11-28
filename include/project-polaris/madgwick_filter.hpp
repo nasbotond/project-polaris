@@ -34,6 +34,7 @@ class MadgwickFilter
         void updateIMUFilter(Vec3 &w, Vec3 &a);
 
         // Helper functions
+        void setInitialState(Quaternion &initial);
 
         // Variables
         Quaternion q;
