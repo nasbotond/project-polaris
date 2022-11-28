@@ -32,7 +32,7 @@
 
 static void glfw_error_callback(int error, const char* description)
 {
-  fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+    fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
 int main(int argc, char* argv[])
@@ -252,8 +252,8 @@ int main(int argc, char* argv[])
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows'
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -267,25 +267,24 @@ int main(int argc, char* argv[])
     colors->SetColor("BkgColor", bkg.data());
 
     VtkViewer vtkViewer_madg;
-    vtkViewer_madg.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData()); // Black background
+    vtkViewer_madg.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
     vtkViewer_madg.addActor(arrowActor_madg);
     vtkViewer_madg.addActor(planeActor_madg);
     vtkViewer_madg.addActor(axes);
 
     VtkViewer vtkViewer_gt;
-    vtkViewer_gt.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData()); // Black background
+    vtkViewer_gt.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
     vtkViewer_gt.addActor(arrowActor_gt);
     vtkViewer_gt.addActor(planeActor_gt);
     vtkViewer_gt.addActor(axes);
 
     VtkViewer vtkViewer_comp;
-    vtkViewer_comp.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData()); // Black background
+    vtkViewer_comp.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
     vtkViewer_comp.addActor(arrowActor_comp);
     vtkViewer_comp.addActor(planeActor_comp);
     vtkViewer_comp.addActor(axes);
 
     // Our state
-    bool show_demo_window = false;
     bool vtk_madg_open = false;
     bool vtk_gt_open = false;
     bool vtk_comp_open = false;
@@ -308,6 +307,7 @@ int main(int argc, char* argv[])
         
             static bool loop = false;
             static int vectorIndex = 0;
+            static bool black = false;
             ImGui::Begin("Menu");
 
             // Other widgets can be placed in the same window as the VTKViewer
@@ -316,14 +316,47 @@ int main(int argc, char* argv[])
             // If you want the VTKViewer to be at the top of a window, you can manually calculate
             // and define its size, accounting for the space taken up by other widgets
 
+            if(vtk_madg_open)
+            {
+                ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
+                ImGui::Begin("Madgwick Estimation", nullptr, VtkViewer::NoScrollFlags());
+                vtkViewer_madg.render();
+                ImGui::End();
+            }
+
+            if(vtk_gt_open)
+            {
+                ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
+                ImGui::Begin("Ground truth", nullptr, VtkViewer::NoScrollFlags());
+                vtkViewer_gt.render();
+                ImGui::End();
+            }
+
+            if(vtk_comp_open)
+            {
+                ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
+                ImGui::Begin("Complementary Estimation", nullptr, VtkViewer::NoScrollFlags());
+                vtkViewer_comp.render();
+                ImGui::End();
+            }
+
             auto renderer = vtkViewer_madg.getRenderer();
             auto renderer_gt = vtkViewer_gt.getRenderer();
             auto renderer_comp = vtkViewer_comp.getRenderer();
-            if (ImGui::Button("VTK Background: Black"))
+
+            ImGui::Checkbox("Black VTK Background", &black);
+            if(black)
             {
                 renderer->SetBackground(0, 0, 0);
                 renderer_gt->SetBackground(0, 0, 0);
                 renderer_comp->SetBackground(0, 0, 0);
+            }
+
+            if(!black)
+            {
+                renderer->SetBackground(colors->GetColor3d("BkgColor").GetData());
+                renderer_gt->SetBackground(colors->GetColor3d("BkgColor").GetData());
+                renderer_comp->SetBackground(colors->GetColor3d("BkgColor").GetData());
             }
 
             static float vtk2BkgAlpha = 0.2f;
@@ -487,30 +520,6 @@ int main(int argc, char* argv[])
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         }
         ImGui::End();
-
-        if(vtk_madg_open)
-        {
-            ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Madgwick Estimation", nullptr, VtkViewer::NoScrollFlags());
-            vtkViewer_madg.render();
-            ImGui::End();
-        }
-
-        if(vtk_gt_open)
-        {
-            ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Ground truth", nullptr, VtkViewer::NoScrollFlags());
-            vtkViewer_gt.render();
-            ImGui::End();
-        }
-
-        if(vtk_comp_open)
-        {
-            ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Complementary Estimation", nullptr, VtkViewer::NoScrollFlags());
-            vtkViewer_comp.render();
-            ImGui::End();
-        }
 
         ImGui::Render();
 
