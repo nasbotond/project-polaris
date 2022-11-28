@@ -1,35 +1,18 @@
 #include "vtk_viewer.hpp"
 
-// dear imgui: Renderer for VTK(OpenGL back end)
-// - Desktop GL: 2.x 3.x 4.x
-// - Embedded GL: ES 2.0 (WebGL 1.0), ES 3.0 (WebGL 2.0)
-// This needs to be used along with a Platform Binding (e.g. GLFW, SDL, Win32, custom..) and a renderer binding (OpenGL)
-
-// Implemented features:
-
-// You can copy and use unmodified imgui_impl_* files in your project. See main.cpp for an example of using this.
-// If you are new to dear imgui, read examples/README.txt and read the documentation at the top of imgui.cpp.
-// https://github.com/ocornut/imgui
-
-// CHANGELOG
-// (minor and older changes stripped away, please see git history for details)
-// 
-
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
 #include <stdio.h>
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
-#include <stddef.h>     // intptr_t
+#include <stddef.h>
 #else
-#include <stdint.h>     // intptr_t
+#include <stdint.h>
 #endif
 
 // OpenGL Loader
-// This can be replaced with another loader, e.g. glad, but
-// remember to change the corresponding initialize call below!
-#include <GL/gl3w.h>            // GL3w, initialized with gl3wInit()
+#include <GL/gl3w.h> // GL3w, initialized with gl3wInit()
 
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
@@ -102,13 +85,12 @@ VtkViewer::VtkViewer()
 VtkViewer::VtkViewer(const VtkViewer& vtkViewer) 
 	: viewportWidth(0), viewportHeight(0), renderWindow(vtkViewer.renderWindow), interactor(vtkViewer.interactor),
 	interactorStyle(vtkViewer.interactorStyle), renderer(vtkViewer.renderer), tex(vtkViewer.tex),
-	firstRender(vtkViewer.firstRender){}
+	firstRender(vtkViewer.firstRender) {}
 
 VtkViewer::VtkViewer(VtkViewer&& vtkViewer) noexcept 
 	: viewportWidth(0), viewportHeight(0), renderWindow(std::move(vtkViewer.renderWindow)),
 	interactor(std::move(vtkViewer.interactor)), interactorStyle(std::move(vtkViewer.interactorStyle)),
-	renderer(std::move(vtkViewer.renderer)), tex(vtkViewer.tex), firstRender(vtkViewer.firstRender)
-	{}
+	renderer(std::move(vtkViewer.renderer)), tex(vtkViewer.tex), firstRender(vtkViewer.firstRender)	{}
 
 VtkViewer::~VtkViewer()
 {

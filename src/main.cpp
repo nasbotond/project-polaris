@@ -25,7 +25,6 @@
 #include "madgwick_filter.hpp"
 #include "comp_filter.hpp"
 #include "csv_reader.hpp"
-#include "animation.hpp"
 #include "metrics.hpp"
 
 #include "vtk_actor_generator.hpp"
@@ -38,7 +37,7 @@ static void glfw_error_callback(int error, const char* description)
 int main(int argc, char* argv[])
 {
     float deltat = 1.0f/286.0f;
-    float compGain = 0.2;
+    float compGain = 0.8;
 
     // Input
     ComplementaryFilter comp = ComplementaryFilter(deltat, compGain);
@@ -136,7 +135,7 @@ int main(int argc, char* argv[])
             // float myaw = atan2(2*madg.q_2*madg.q_3-2*madg.q_1*madg.q_4, 2*madg.q_1 *madg.q_1+2*madg.q_2*madg.q_2-1);
             // float mpitch = -asin(2*madg.q_2*madg.q_4+2*madg.q_1*madg.q_3);
             // float mroll = atan2(2*madg.q_3*madg.q_4-2*madg.q_1*madg.q_2, 2*madg.q_1*madg.q_1 + 2*madg.q_4*madg.q_4-1);
-            // TODO: ENU frame???
+
             Quaternion enu_est = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), madg_mag.q);
             float myaw = enu_est.yaw();
             float mpitch = enu_est.pitch();
@@ -144,15 +143,16 @@ int main(int argc, char* argv[])
             gravity_vectors_madg.push_back({-sin(mpitch), cos(mpitch)*sin(mroll), -cos(mpitch)*cos(mroll)});
 
             Quaternion enu_gt = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), read.gt.at(i));
-            float gyaw = enu_gt.yaw();
-            float gpitch = enu_gt.pitch();
-            float groll = enu_gt.roll();
+            float gyaw = read.gt.at(i).yaw();
+            float gpitch = read.gt.at(i).pitch();
+            float groll = read.gt.at(i).roll();
             gravity_vectors_gt.push_back({-sin(gpitch), cos(gpitch)*sin(groll), -cos(gpitch)*cos(groll)});
 
+            // TODO: Something wrong here, is it in ENU?
             Quaternion enu_comp = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), comp_mag.q);
-            float cyaw = enu_comp.yaw();
-            float cpitch = enu_comp.pitch();
-            float croll = enu_comp.roll();
+            float cyaw = comp_mag.q.yaw();
+            float cpitch = comp_mag.q.pitch();
+            float croll = comp_mag.q.roll();
             gravity_vectors_comp.push_back({-sin(cpitch), cos(cpitch)*sin(croll), -cos(cpitch)*cos(croll)});
         }
 
