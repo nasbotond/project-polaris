@@ -61,10 +61,18 @@ set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 set(INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/include/project-polaris/")
 include_directories(${INCLUDES})
 
+# TinyFileDialogs
+set(tfd_dir ${CMAKE_CURRENT_SOURCE_DIR}/tinyfiledialogs)
+set(tfd_inc ${tfd_dir}/)
+set(tfd_src ${tfd_dir}/tinyfiledialogs.c)
+add_library(tfd STATIC ${tfd_src})
+include_directories(${tfd_inc})
+# target_link_libraries(${EXEC_NAME} tfd)
+
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
 # together, please see CMakeLists-alt.txt
-add_executable(${EXEC_NAME} ${SOURCE_DIR}/main.cpp ${SOURCE_DIR}/madgwick_filter.cpp ${SOURCE_DIR}/comp_filter.cpp)
+add_executable(${EXEC_NAME} ${SOURCE_DIR}/main.cpp ${SOURCE_DIR}/madgwick_filter.cpp ${SOURCE_DIR}/comp_filter.cpp ${tfd_src})
 
 # OpenGL
 find_package(OpenGL REQUIRED)

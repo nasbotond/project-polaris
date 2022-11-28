@@ -28,6 +28,10 @@
 #include "metrics.hpp"
 
 #include "vtk_actor_generator.hpp"
+#include "tinyfiledialogs.h"
+
+char const* selectedfolderPath;
+std::string fPath;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -35,9 +39,9 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, const int &start_index, const int &end_index, std::vector<std::vector<double>> &gravity_vectors_madg,
- std::vector<std::vector<double>> &gravity_vectors_gt, std::vector<std::vector<double>> &gravity_vectors_comp)
+ std::vector<std::vector<double>> &gravity_vectors_gt, std::vector<std::vector<double>> &gravity_vectors_comp, std::string &results_suffix)
 {
-    float deltat = 1.0f/(float)freq;
+        float deltat = 1.0f/(float)freq;
 
     // Input
     ComplementaryFilter comp = ComplementaryFilter(deltat, comp_gain);
@@ -57,23 +61,23 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
     std::ofstream error_comp_mag;
     std::ofstream error_comp_no_mag;
     // std::ofstream euler_diff;
-    
-    // read.retrieveFileItems();
 
-    std::vector<Vec3> a = CsvReader::getAccData();
-    std::vector<Vec3> w = CsvReader::getGyrData();
-    std::vector<Vec3> m = CsvReader::getMagData();
-    std::vector<Quaternion> gt = CsvReader::getGTData();
+    std::vector<Vec3> a = CsvReader::getVec3Data(fPath + "imu_acc.csv");
+    std::vector<Vec3> w = CsvReader::getVec3Data(fPath + "imu_gyr.csv");
+    std::vector<Vec3> m = CsvReader::getVec3Data(fPath + "imu_mag.csv");
+    std::vector<Quaternion> gt = CsvReader::getQuatData(fPath + "opt_quat.csv");
 
-    est_madg_mag.open ("../results/est_madg_mag.csv");
-    est_madg_no_mag.open ("../results/est_madg_no_mag.csv");
-    est_comp_mag.open ("../results/est_comp_mag.csv");
-    est_comp_no_mag.open ("../results/est_comp_no_mag.csv");
+    std::filesystem::create_directories(fPath + results_suffix);
 
-    error_madg_mag.open ("../results/error_madg_mag.csv");
-    error_madg_no_mag.open ("../results/error_madg_no_mag.csv");
-    error_comp_mag.open ("../results/error_comp_mag.csv");
-    error_comp_no_mag.open ("../results/error_comp_no_mag.csv");
+    est_madg_mag.open (fPath + results_suffix + "/est_madg_mag.csv");
+    est_madg_no_mag.open (fPath + results_suffix + "/est_madg_no_mag.csv");
+    est_comp_mag.open (fPath + results_suffix + "/est_comp_mag.csv");
+    est_comp_no_mag.open (fPath + results_suffix + "/est_comp_no_mag.csv");
+
+    error_madg_mag.open (fPath + results_suffix + "/error_madg_mag.csv");
+    error_madg_no_mag.open (fPath + results_suffix + "/error_madg_no_mag.csv");
+    error_comp_mag.open (fPath + results_suffix + "/error_comp_mag.csv");
+    error_comp_no_mag.open (fPath + results_suffix + "/error_comp_no_mag.csv");
 
     // euler_diff.open ("../results/euler_diff.csv");
 
@@ -156,23 +160,6 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
     error_comp_no_mag.close();
 
     // euler_diff.close();
-
-    // std::vector<Vec3> rmse = read.getRMSE();
-    // std::cout << "Madg Mag Total: " << rmse.at(0).x << std::endl;
-    // std::cout << "Madg Mag Inc: " << rmse.at(0).y << std::endl;
-    // std::cout << "Madg Mag Head: " << rmse.at(0).z << std::endl;
-
-    // std::cout << "Madg No Mag Total: " << rmse.at(1).x << std::endl;
-    // std::cout << "Madg No Mag Inc: " << rmse.at(1).y << std::endl;
-    // std::cout << "Madg No Mag Head: " << rmse.at(1).z << std::endl;
-
-    // std::cout << "Comp Mag Total: " << rmse.at(2).x << std::endl;
-    // std::cout << "Comp Mag Inc: " << rmse.at(2).y << std::endl;
-    // std::cout << "Comp Mag Head: " << rmse.at(2).z << std::endl;
-
-    // std::cout << "Comp No Mag Total: " << rmse.at(3).x << std::endl;
-    // std::cout << "Comp No Mag Inc: " << rmse.at(3).y << std::endl;
-    // std::cout << "Comp No Mag Head: " << rmse.at(3).z << std::endl;
 }
 
 int main(int argc, char* argv[])
@@ -223,7 +210,7 @@ int main(int argc, char* argv[])
     #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1360, 720, "Dear ImGui VTKViewer Example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1360, 720, "Orientation Estimation Visualization", NULL, NULL);
     if (window == NULL)
     {
         return 1;
@@ -286,12 +273,31 @@ int main(int argc, char* argv[])
         ImGui::NewFrame();
 
         ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-        ImGui::ShowDemoWindow(&show_demo_window);
-        
+        // ImGui::ShowDemoWindow(&show_demo_window);
+
         {        
             static bool loop = false;
             static bool black = false;
             ImGui::Begin("Menu");
+
+            if (ImGui::Button("Select Folder"))
+            {
+                selectedfolderPath = NULL;
+                fPath = "";
+
+                // If the dialog is open and we try to open it again, stop the program until it is closed
+                selectedfolderPath = tinyfd_selectFolderDialog("Select Folder with data files in it", "");
+                if (!selectedfolderPath)
+                {
+
+                }
+                else
+                {
+                    fPath = selectedfolderPath;
+                }
+            }
+
+            ImGui::Text("%s", fPath.c_str());
 
             static int start_index = 10000;
             ImGui::InputInt("Starting index", &start_index);
@@ -303,53 +309,91 @@ int main(int argc, char* argv[])
             ImGui::InputInt("Sample frequency", &freq);
 
             static float comp_gain = 0.2f;
-            ImGui::InputFloat("Comp. Gain", &comp_gain, 0.01f, 1.0f, "%.3f");
+            ImGui::InputFloat("Comp. gain", &comp_gain, 0.01f, 1.0f, "%.3f");
 
             static float madg_beta = 0.2f;
-            ImGui::InputFloat("Madg. Beta", &madg_beta, 0.01f, 1.0f, "%.3f");
+            ImGui::InputFloat("Madg. beta", &madg_beta, 0.01f, 1.0f, "%.3f");
 
             if(ImGui::Button("Calculate"))
             {
-                vtkViewer_madg.removeActor(arrowActor_madg);
-                vtkViewer_madg.removeActor(planeActor_madg);
-                vtkViewer_gt.removeActor(arrowActor_gt);
-                vtkViewer_gt.removeActor(planeActor_gt);
-                vtkViewer_comp.removeActor(arrowActor_comp);
-                vtkViewer_comp.removeActor(planeActor_comp);
-                gravity_vectors_madg.clear();
-                gravity_vectors_gt.clear();
-                gravity_vectors_comp.clear();
+                if(fPath.length() != 0)
+                {
+                    // ImGui::OpenPopup("ERROR");
+                    vtkViewer_madg.removeActor(arrowActor_madg);
+                    vtkViewer_madg.removeActor(planeActor_madg);
+                    vtkViewer_gt.removeActor(arrowActor_gt);
+                    vtkViewer_gt.removeActor(planeActor_gt);
+                    vtkViewer_comp.removeActor(arrowActor_comp);
+                    vtkViewer_comp.removeActor(planeActor_comp);
+                    gravity_vectors_madg.clear();
+                    gravity_vectors_gt.clear();
+                    gravity_vectors_comp.clear();
 
-                runFilter(freq, comp_gain, madg_beta, start_index, end_index, gravity_vectors_madg, gravity_vectors_gt, gravity_vectors_comp);
-                arrowActor_madg = getArrowActor(gravity_vectors_madg.at(0));
-                planeActor_madg = getPlaneActor(gravity_vectors_madg.at(0));
+                    std::string results_suffix = "_" + std::to_string(freq) + "_" + std::to_string(comp_gain) + "_" + std::to_string(madg_beta) + "_" + std::to_string(start_index) + "_" + std::to_string(end_index);
 
-                arrowActor_gt = getArrowActor(gravity_vectors_gt.at(0));
-                planeActor_gt = getPlaneActor(gravity_vectors_gt.at(0));
-
-                arrowActor_comp = getArrowActor(gravity_vectors_comp.at(0));
-                planeActor_comp = getPlaneActor(gravity_vectors_comp.at(0));
-
-                vtkViewer_madg.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                vtkViewer_madg.addActor(arrowActor_madg);
-                vtkViewer_madg.addActor(planeActor_madg);
-                vtkViewer_madg.addActor(axes);
-
-                vtkViewer_gt.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                vtkViewer_gt.addActor(arrowActor_gt);
-                vtkViewer_gt.addActor(planeActor_gt);
-                vtkViewer_gt.addActor(axes);
-
-                vtkViewer_comp.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                vtkViewer_comp.addActor(arrowActor_comp);
-                vtkViewer_comp.addActor(planeActor_comp);
-                vtkViewer_comp.addActor(axes);
-
-                rmse = CsvReader::getRMSE();
+                    std::cout << fPath << std::endl;
+                    std::string str = fPath.substr(0, fPath.length()-2);
+                    char ch = '/';            
+                    size_t index = str.rfind(ch);
+                    std::cout << index << std::endl;
+                    if (index != std::string::npos) 
+                    {
+                        results_suffix = "out_" + fPath.substr(index+1, fPath.length()-2) + results_suffix;
+                    }
+                    else
+                    {
+                        results_suffix = "out" + results_suffix;
+                    }
                 
-                isCalculated = true;
-                vectorIndex = 0;
+                    runFilter(freq, comp_gain, madg_beta, start_index, end_index, gravity_vectors_madg, gravity_vectors_gt, gravity_vectors_comp, results_suffix);
+                    arrowActor_madg = getArrowActor(gravity_vectors_madg.at(0));
+                    planeActor_madg = getPlaneActor(gravity_vectors_madg.at(0));
+
+                    arrowActor_gt = getArrowActor(gravity_vectors_gt.at(0));
+                    planeActor_gt = getPlaneActor(gravity_vectors_gt.at(0));
+
+                    arrowActor_comp = getArrowActor(gravity_vectors_comp.at(0));
+                    planeActor_comp = getPlaneActor(gravity_vectors_comp.at(0));
+
+                    vtkViewer_madg.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
+                    vtkViewer_madg.addActor(arrowActor_madg);
+                    vtkViewer_madg.addActor(planeActor_madg);
+                    vtkViewer_madg.addActor(axes);
+
+                    vtkViewer_gt.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
+                    vtkViewer_gt.addActor(arrowActor_gt);
+                    vtkViewer_gt.addActor(planeActor_gt);
+                    vtkViewer_gt.addActor(axes);
+
+                    vtkViewer_comp.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
+                    vtkViewer_comp.addActor(arrowActor_comp);
+                    vtkViewer_comp.addActor(planeActor_comp);
+                    vtkViewer_comp.addActor(axes);
+
+                    rmse = CsvReader::getRMSE(fPath, results_suffix);
+                    
+                    isCalculated = true;
+                    vectorIndex = 0;
+                }
+                else
+                {
+                    ImGui::OpenPopup("No data, no problem...?");
+                }
             }
+
+            // Always center this window when appearing
+            ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+            ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+            if (ImGui::BeginPopupModal("No data, no problem...?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::Text("Please select a folder containing data files!\n\n");
+                ImGui::Separator();
+
+                if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+                ImGui::SetItemDefaultFocus();
+                ImGui::EndPopup();
+            }
+
             if(isCalculated)
             {
                 // Other widgets can be placed in the same window as the VTKViewer
@@ -362,7 +406,7 @@ int main(int argc, char* argv[])
                 auto renderer_gt = vtkViewer_gt.getRenderer();
                 auto renderer_comp = vtkViewer_comp.getRenderer();
 
-                ImGui::Checkbox("Black VTK Background", &black);
+                ImGui::Checkbox("Black background", &black);
                 if(black)
                 {
                     renderer->SetBackground(0, 0, 0);
@@ -530,10 +574,10 @@ int main(int argc, char* argv[])
                     vtkViewer_comp.addActor(planeActor_comp);
                 }
 
-                ImGui::Text("VTK Windows:");
-                ImGui::Checkbox("Ground Truth", &vtk_gt_open);
-                ImGui::Checkbox("Madgwick", &vtk_madg_open);
-                ImGui::Checkbox("Complementary", &vtk_comp_open);
+                ImGui::Text("Show vector visualization windows:");
+                ImGui::Checkbox("Ground truth", &vtk_gt_open);
+                ImGui::Checkbox("Madgwick Filter estimation", &vtk_madg_open);
+                ImGui::Checkbox("Complementary filter estimation", &vtk_comp_open);
 
                 ImGui::Text("RMSE Values (degrees): ");
                 if (ImGui::BeginTable("table1", 5))
@@ -582,7 +626,7 @@ int main(int argc, char* argv[])
         if(vtk_madg_open)
         {
             ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Madgwick Estimation", &vtk_madg_open, VtkViewer::NoScrollFlags());
+            ImGui::Begin("Madgwick Filter estimation", &vtk_madg_open, VtkViewer::NoScrollFlags());
             ImGui::Text("Euler angles (degrees): ");
             if (ImGui::BeginTable("table2", 3))
             {
@@ -634,7 +678,7 @@ int main(int argc, char* argv[])
         if(vtk_comp_open)
         {
             ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Complementary Estimation", &vtk_comp_open, VtkViewer::NoScrollFlags());
+            ImGui::Begin("Complementary Filter estimation", &vtk_comp_open, VtkViewer::NoScrollFlags());
             ImGui::Text("Euler angles (degrees): ");
             if (ImGui::BeginTable("table4", 3))
             {
@@ -662,6 +706,7 @@ int main(int argc, char* argv[])
             vtkViewer_comp.render();
             ImGui::End();
         }
+
         ImGui::Render();
 
         int display_w, display_h;
