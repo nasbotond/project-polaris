@@ -17,18 +17,21 @@
 #include <vtkGenericRenderWindowInteractor.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkRenderer.h>
+#include <vtkCamera.h>
 
 // RGB Color in range [0.0, 1.0]
 #define DEFAULT_BACKGROUND 0.39, 0.39, 0.39
 // Alpha value in range [0.0, 1.0] where 1 = opaque
 #define DEFAULT_ALPHA 1
 
-class VtkViewerError : public std::runtime_error {
+class VtkViewerError : public std::runtime_error 
+{
 public:
 	explicit VtkViewerError(const std::string& message) throw() : std::runtime_error(message) {}
 	~VtkViewerError() = default;
 public:
-	virtual char const* what() const throw() {
+	virtual char const* what() const throw() 
+	{
 		return exception::what();
 	}
 };
@@ -67,48 +70,59 @@ public:
 		return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 	}
 public:
-	inline void setRenderWindow(const vtkSmartPointer<vtkGenericOpenGLRenderWindow>& renderWindow) {
+	inline void setRenderWindow(const vtkSmartPointer<vtkGenericOpenGLRenderWindow>& renderWindow) 
+	{
 		this->renderWindow = renderWindow;
 	}
 
-	inline void setInteractor(const vtkSmartPointer<vtkGenericRenderWindowInteractor>& interactor) {
+	inline void setInteractor(const vtkSmartPointer<vtkGenericRenderWindowInteractor>& interactor) 
+	{
 		this->interactor = interactor;
 	}
 
-	inline void setInteractorStyle(const vtkSmartPointer<vtkInteractorStyleTrackballCamera>& interactorStyle) {
+	inline void setInteractorStyle(const vtkSmartPointer<vtkInteractorStyleTrackballCamera>& interactorStyle) 
+	{
 		this->interactorStyle = interactorStyle;
 	}
 
-	inline void setRenderer(const vtkSmartPointer<vtkRenderer>& renderer) {
+	inline void setRenderer(const vtkSmartPointer<vtkRenderer>& renderer)
+	{
 		this->renderer = renderer;
 	}
 public:
-	inline vtkSmartPointer<vtkGenericOpenGLRenderWindow>& getRenderWindow() {
+	inline vtkSmartPointer<vtkGenericOpenGLRenderWindow>& getRenderWindow() 
+	{
 		return renderWindow;
 	}
 
-	inline vtkSmartPointer<vtkGenericRenderWindowInteractor>& getInteractor() {
+	inline vtkSmartPointer<vtkGenericRenderWindowInteractor>& getInteractor() 
+	{
 		return interactor;
 	}
 
-	inline vtkSmartPointer<vtkInteractorStyleTrackballCamera>& getInteractorStyle() {
+	inline vtkSmartPointer<vtkInteractorStyleTrackballCamera>& getInteractorStyle() 
+	{
 		return interactorStyle;
 	}
 
-	inline vtkSmartPointer<vtkRenderer>& getRenderer() {
+	inline vtkSmartPointer<vtkRenderer>& getRenderer() 
+	{
 		return renderer;
 	}
 public:
 
-	inline unsigned int getViewportWidth() const {
+	inline unsigned int getViewportWidth() const 
+	{
 		return viewportWidth;
 	}
 
-	inline unsigned int getViewportHeight() const {
+	inline unsigned int getViewportHeight() const 
+	{
 		return viewportHeight;
 	}
 
-	inline unsigned int getTexture() const {
+	inline unsigned int getTexture() const 
+	{
 		return tex;
 	}
 };

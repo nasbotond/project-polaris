@@ -144,7 +144,7 @@ message (STATUS "VTK Version: ${VTK_VERSION}")
 
 # imgui-vtk (VTK Viewer class)
 # set(imgui_vtk_viewer_dir ${SOURCE_DIR})
-add_library(imgui_vtk_viewer STATIC ${SOURCE_DIR}/VtkViewer.cpp)
+add_library(imgui_vtk_viewer STATIC ${SOURCE_DIR}/vtk_viewer.cpp)
 target_include_directories(imgui_vtk_viewer PUBLIC ${SOURCE_DIR})
 target_link_libraries(imgui_vtk_viewer gl3w) # Since gl3w was compiled as a static library, we need to link to it
 target_link_libraries(imgui_vtk_viewer imgui) # Since imgui was compiled as a static library, we need to link to it

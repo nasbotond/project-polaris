@@ -1,4 +1,4 @@
-#include "VtkViewer.hpp"
+#include "vtk_viewer.hpp"
 
 // dear imgui: Renderer for VTK(OpenGL back end)
 // - Desktop GL: 2.x 3.x 4.x
@@ -140,6 +140,9 @@ void VtkViewer::init()
 	renderer->ResetCamera();
 	renderer->SetBackground(DEFAULT_BACKGROUND);
 	renderer->SetBackgroundAlpha(DEFAULT_ALPHA);
+	renderer->GetActiveCamera()->SetPosition(1, -5, 1);
+    renderer->GetActiveCamera()->SetFocalPoint(0, 0, 0);
+    renderer->GetActiveCamera()->SetViewUp(0, 0, 1);  
 
 	interactorStyle = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
 	interactorStyle->SetDefaultRenderer(renderer);
@@ -165,7 +168,8 @@ void VtkViewer::init()
 	renderWindow->AddRenderer(renderer);
 	renderWindow->SetInteractor(interactor);
 
-	if (!renderer || !interactorStyle || !renderWindow || !interactor){
+	if (!renderer || !interactorStyle || !renderWindow || !interactor)
+	{
 		throw VtkViewerError("Couldn't initialize VtkViewer");
 	}
 }
@@ -200,7 +204,8 @@ void VtkViewer::addActors(const vtkSmartPointer<vtkPropCollection>& actors)
 	actors->InitTraversal();
 	vtkProp* actor;
 	vtkCollectionSimpleIterator sit;
-	for (actors->InitTraversal(sit); (actor = actors->GetNextProp(sit));){
+	for (actors->InitTraversal(sit); (actor = actors->GetNextProp(sit));)
+	{
 		renderer->AddActor(actor);
 		renderer->ResetCamera();
 	}

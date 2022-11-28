@@ -5,9 +5,7 @@
 #include <array>
 
 // OpenGL Loader
-// This can be replaced with another loader, e.g. glad, but
-// remember to also change the corresponding initialize call!
-#include <GL/gl3w.h>            // GL3w, initialized with gl3wInit() below
+#include <GL/gl3w.h> // GL3w, initialized with gl3wInit() below
 
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
@@ -16,7 +14,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "VtkViewer.hpp"
+#include "vtk_viewer.hpp"
 
 #include <vtkSmartPointer.h>
 #include <vtkActor.h>
@@ -29,8 +27,8 @@
 #include "csv_reader.hpp"
 #include "animation.hpp"
 #include "metrics.hpp"
-// File-Specific Includes
-#include "imgui_vtk_demo.hpp" // Actor generator for this demo
+
+#include "vtk_actor_generator.hpp"
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -49,7 +47,9 @@ int main(int argc, char* argv[])
     MadgwickFilter madg_mag = MadgwickFilter(deltat);
 
     CsvReader read = CsvReader("../test_data/");
-    std::vector<std::vector<double>> gravity_vectors;
+    std::vector<std::vector<double>> gravity_vectors_madg;
+    std::vector<std::vector<double>> gravity_vectors_gt;
+    std::vector<std::vector<double>> gravity_vectors_comp;
 
     std::ofstream est_madg_mag;
     std::ofstream est_madg_no_mag;
@@ -136,10 +136,24 @@ int main(int argc, char* argv[])
             // float myaw = atan2(2*madg.q_2*madg.q_3-2*madg.q_1*madg.q_4, 2*madg.q_1 *madg.q_1+2*madg.q_2*madg.q_2-1);
             // float mpitch = -asin(2*madg.q_2*madg.q_4+2*madg.q_1*madg.q_3);
             // float mroll = atan2(2*madg.q_3*madg.q_4-2*madg.q_1*madg.q_2, 2*madg.q_1*madg.q_1 + 2*madg.q_4*madg.q_4-1);
-            float myaw = madg.q.yaw();
-            float mpitch = madg.q.pitch();
-            float mroll = madg.q.roll();
-            gravity_vectors.push_back({-sin(mpitch), cos(mpitch)*sin(mroll), cos(mpitch)*cos(mroll)});
+            // TODO: ENU frame???
+            Quaternion enu_est = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), madg_mag.q);
+            float myaw = enu_est.yaw();
+            float mpitch = enu_est.pitch();
+            float mroll = enu_est.roll();
+            gravity_vectors_madg.push_back({-sin(mpitch), cos(mpitch)*sin(mroll), -cos(mpitch)*cos(mroll)});
+
+            Quaternion enu_gt = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), read.gt.at(i));
+            float gyaw = enu_gt.yaw();
+            float gpitch = enu_gt.pitch();
+            float groll = enu_gt.roll();
+            gravity_vectors_gt.push_back({-sin(gpitch), cos(gpitch)*sin(groll), -cos(gpitch)*cos(groll)});
+
+            Quaternion enu_comp = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), comp_mag.q);
+            float cyaw = enu_comp.yaw();
+            float cpitch = enu_comp.pitch();
+            float croll = enu_comp.roll();
+            gravity_vectors_comp.push_back({-sin(cpitch), cos(cpitch)*sin(croll), -cos(cpitch)*cos(croll)});
         }
 
         est_madg_mag.close();
@@ -178,8 +192,14 @@ int main(int argc, char* argv[])
     }
 
     // Setup pipeline
-    auto actor = getArrowActor(gravity_vectors.at(0));
-    auto planeActor = getPlaneActor(gravity_vectors.at(0));
+    auto arrowActor_madg = getArrowActor(gravity_vectors_madg.at(0));
+    auto planeActor_madg = getPlaneActor(gravity_vectors_madg.at(0));
+
+    auto arrowActor_gt = getArrowActor(gravity_vectors_gt.at(0));
+    auto planeActor_gt = getPlaneActor(gravity_vectors_gt.at(0));
+
+    auto arrowActor_comp = getArrowActor(gravity_vectors_comp.at(0));
+    auto planeActor_comp = getPlaneActor(gravity_vectors_comp.at(0));
 
     // AXES
     auto transformA = vtkSmartPointer<vtkTransform>::New();
@@ -187,18 +207,8 @@ int main(int argc, char* argv[])
 
     auto axes = vtkSmartPointer<vtkAxesActor>::New();
 
-    // AXES
-    // vtkNew<vtkTransform> transformA;
-    // transformA->Translate(0.0, 0.0, 0.0);
-
-    // vtkNew<vtkAxesActor> axes;
-
-    // // The axes are positioned with a user transform
-    // axes->SetUserTransform(transformA);
-
     // The axes are positioned with a user transform
     axes->SetUserTransform(transformA);
-
 
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
@@ -223,7 +233,7 @@ int main(int argc, char* argv[])
     #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui VTKViewer Example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1360, 720, "Dear ImGui VTKViewer Example", NULL, NULL);
     if (window == NULL)
     {
         return 1;
@@ -252,25 +262,33 @@ int main(int argc, char* argv[])
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Initialize VtkViewer objects
-    // VtkViewer vtkViewer1;
-    // vtkViewer1.addActor(actor);
-
     vtkNew<vtkNamedColors> colors;
     std::array<unsigned char, 4> bkg{{26, 51, 77, 255}};
     colors->SetColor("BkgColor", bkg.data());
 
-    VtkViewer vtkViewer2;
-    vtkViewer2.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData()); // Black background
-    vtkViewer2.addActor(actor);
-    vtkViewer2.addActor(planeActor);
-    vtkViewer2.addActor(axes);
+    VtkViewer vtkViewer_madg;
+    vtkViewer_madg.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData()); // Black background
+    vtkViewer_madg.addActor(arrowActor_madg);
+    vtkViewer_madg.addActor(planeActor_madg);
+    vtkViewer_madg.addActor(axes);
+
+    VtkViewer vtkViewer_gt;
+    vtkViewer_gt.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData()); // Black background
+    vtkViewer_gt.addActor(arrowActor_gt);
+    vtkViewer_gt.addActor(planeActor_gt);
+    vtkViewer_gt.addActor(axes);
+
+    VtkViewer vtkViewer_comp;
+    vtkViewer_comp.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData()); // Black background
+    vtkViewer_comp.addActor(arrowActor_comp);
+    vtkViewer_comp.addActor(planeActor_comp);
+    vtkViewer_comp.addActor(axes);
 
     // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
-    bool vtk_2_open = true;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    bool show_demo_window = false;
+    bool vtk_madg_open = false;
+    bool vtk_gt_open = false;
+    bool vtk_comp_open = false;
 
     bool isPlaying = false;
     bool isManuelPlayback = true;
@@ -278,11 +296,6 @@ int main(int argc, char* argv[])
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
 
         // Start the Dear ImGui frame
@@ -290,62 +303,12 @@ int main(int argc, char* argv[])
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-        {
-            ImGui::ShowDemoWindow(&show_demo_window);
-        }
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-            ImGui::Checkbox("VTK Viewer #2", &vtk_2_open);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button")){                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            }
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        }
-        ImGui::End();
-
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-            {
-                show_another_window = false;
-            }
-            ImGui::End();
-        }
-
-        // 4. Show a simple VtkViewer Instance (Always Open)
-        // ImGui::SetNextWindowSize(ImVec2(360, 240), ImGuiCond_FirstUseEver);
-        // ImGui::Begin("Vtk Viewer 1", nullptr, VtkViewer::NoScrollFlags());
-        // vtkViewer1.render(); // default render size = ImGui::GetContentRegionAvail()
-        // ImGui::End();
-
-        // 5. Show a more complex VtkViewer Instance (Closable, Widgets in Window)
         ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-        if (vtk_2_open)
         {
+        
             static bool loop = false;
             static int vectorIndex = 0;
-
-            ImGui::Begin("Vtk Viewer 2", &vtk_2_open, VtkViewer::NoScrollFlags());
+            ImGui::Begin("Menu");
 
             // Other widgets can be placed in the same window as the VTKViewer
             // However, since the VTKViewer is rendered to size ImGui::GetContentRegionAvail(),
@@ -353,41 +316,46 @@ int main(int argc, char* argv[])
             // If you want the VTKViewer to be at the top of a window, you can manually calculate
             // and define its size, accounting for the space taken up by other widgets
 
-            auto renderer = vtkViewer2.getRenderer();
+            auto renderer = vtkViewer_madg.getRenderer();
+            auto renderer_gt = vtkViewer_gt.getRenderer();
+            auto renderer_comp = vtkViewer_comp.getRenderer();
             if (ImGui::Button("VTK Background: Black"))
             {
                 renderer->SetBackground(0, 0, 0);
+                renderer_gt->SetBackground(0, 0, 0);
+                renderer_comp->SetBackground(0, 0, 0);
             }
-            // ImGui::SameLine();
-            // if (ImGui::Button("VTK Background: Red"))
-            // {
-            //     renderer->SetBackground(1, 0, 0);
-            // }
-            // ImGui::SameLine();
-            // if (ImGui::Button("VTK Background: Green"))
-            // {
-            //     renderer->SetBackground(0, 1, 0);
-            // }
-            // ImGui::SameLine();
-            // if (ImGui::Button("VTK Background: Blue"))
-            // {
-            //     renderer->SetBackground(0, 0, 1);
-            // }
 
             static float vtk2BkgAlpha = 0.2f;
             ImGui::SliderFloat("Background Alpha", &vtk2BkgAlpha, 0.0f, 1.0f);
             renderer->SetBackgroundAlpha(vtk2BkgAlpha);
+            renderer_gt->SetBackgroundAlpha(vtk2BkgAlpha);
+            renderer_comp->SetBackgroundAlpha(vtk2BkgAlpha);
 
             if(isManuelPlayback)
             {
-                if(ImGui::SliderInt("Vector Index", &vectorIndex, 0, gravity_vectors.size()-1))
+                if(ImGui::SliderInt("Vector Index", &vectorIndex, 0, gravity_vectors_madg.size()-1))
                 {
-                    vtkViewer2.removeActor(actor);
-                    vtkViewer2.removeActor(planeActor);
-                    actor = getArrowActor(gravity_vectors.at(vectorIndex));
-                    planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
-                    vtkViewer2.addActor(actor);
-                    vtkViewer2.addActor(planeActor);
+                    vtkViewer_madg.removeActor(arrowActor_madg);
+                    vtkViewer_madg.removeActor(planeActor_madg);
+                    arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
+                    planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
+                    vtkViewer_madg.addActor(arrowActor_madg);
+                    vtkViewer_madg.addActor(planeActor_madg);
+
+                    vtkViewer_gt.removeActor(arrowActor_gt);
+                    vtkViewer_gt.removeActor(planeActor_gt);
+                    arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
+                    planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
+                    vtkViewer_gt.addActor(arrowActor_gt);
+                    vtkViewer_gt.addActor(planeActor_gt);
+
+                    vtkViewer_comp.removeActor(arrowActor_comp);
+                    vtkViewer_comp.removeActor(planeActor_comp);
+                    arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
+                    planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
+                    vtkViewer_comp.addActor(arrowActor_comp);
+                    vtkViewer_comp.addActor(planeActor_comp);
                 }
 
                 ImGui::Checkbox("Loop", &loop);
@@ -405,32 +373,61 @@ int main(int argc, char* argv[])
 
                 if(ImGui::Button("Next Index"))
                 {
-                    if(vectorIndex >= gravity_vectors.size()-1) 
+                    // std::cout << gravity_vectors.at(vectorIndex).at(0) << " " << gravity_vectors.at(vectorIndex).at(1) << " " << gravity_vectors.at(vectorIndex).at(2) << std::endl;
+                    if(vectorIndex >= gravity_vectors_madg.size()-1) 
                     {
                         vectorIndex = 0;
-                        vtkViewer2.removeActor(actor);
-                        vtkViewer2.removeActor(planeActor);
-                        actor = getArrowActor(gravity_vectors.at(vectorIndex));
-                        planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
-                        vtkViewer2.addActor(actor);
-                        vtkViewer2.addActor(planeActor);
+                        vtkViewer_madg.removeActor(arrowActor_madg);
+                        vtkViewer_madg.removeActor(planeActor_madg);
+                        arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
+                        planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
+                        vtkViewer_madg.addActor(arrowActor_madg);
+                        vtkViewer_madg.addActor(planeActor_madg);
+
+                        vtkViewer_gt.removeActor(arrowActor_gt);
+                        vtkViewer_gt.removeActor(planeActor_gt);
+                        arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
+                        planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
+                        vtkViewer_gt.addActor(arrowActor_gt);
+                        vtkViewer_gt.addActor(planeActor_gt);
+
+                        vtkViewer_comp.removeActor(arrowActor_comp);
+                        vtkViewer_comp.removeActor(planeActor_comp);
+                        arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
+                        planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
+                        vtkViewer_comp.addActor(arrowActor_comp);
+                        vtkViewer_comp.addActor(planeActor_comp);
                     }
                     else
                     {
                         vectorIndex++;
-                        vtkViewer2.removeActor(actor);
-                        vtkViewer2.removeActor(planeActor);
-                        actor = getArrowActor(gravity_vectors.at(vectorIndex));
-                        planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
-                        vtkViewer2.addActor(actor);
-                        vtkViewer2.addActor(planeActor);
+                        vtkViewer_madg.removeActor(arrowActor_madg);
+                        vtkViewer_madg.removeActor(planeActor_madg);
+                        arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
+                        planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
+                        vtkViewer_madg.addActor(arrowActor_madg);
+                        vtkViewer_madg.addActor(planeActor_madg);
+
+                        vtkViewer_gt.removeActor(arrowActor_gt);
+                        vtkViewer_gt.removeActor(planeActor_gt);
+                        arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
+                        planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
+                        vtkViewer_gt.addActor(arrowActor_gt);
+                        vtkViewer_gt.addActor(planeActor_gt);
+
+                        vtkViewer_comp.removeActor(arrowActor_comp);
+                        vtkViewer_comp.removeActor(planeActor_comp);
+                        arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
+                        planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
+                        vtkViewer_comp.addActor(arrowActor_comp);
+                        vtkViewer_comp.addActor(planeActor_comp);
                     }
                 }
             }
 
             if(isPlaying)
             {
-                if(vectorIndex >= gravity_vectors.size()-1) 
+                if(vectorIndex >= gravity_vectors_madg.size()-1) 
                 {
                     if(!loop)
                     {
@@ -438,24 +435,80 @@ int main(int argc, char* argv[])
                     }
 
                     vectorIndex = 0;
-                    vtkViewer2.removeActor(actor);
-                    vtkViewer2.removeActor(planeActor);
-                    actor = getArrowActor(gravity_vectors.at(vectorIndex));
-                    planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
-                    vtkViewer2.addActor(actor);
-                    vtkViewer2.addActor(planeActor);
+                    vtkViewer_madg.removeActor(arrowActor_madg);
+                    vtkViewer_madg.removeActor(planeActor_madg);
+                    arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
+                    planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
+                    vtkViewer_madg.addActor(arrowActor_madg);
+                    vtkViewer_madg.addActor(planeActor_madg);
+
+                    vtkViewer_gt.removeActor(arrowActor_gt);
+                    vtkViewer_gt.removeActor(planeActor_gt);
+                    arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
+                    planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
+                    vtkViewer_gt.addActor(arrowActor_gt);
+                    vtkViewer_gt.addActor(planeActor_gt);
+
+                    vtkViewer_comp.removeActor(arrowActor_comp);
+                    vtkViewer_comp.removeActor(planeActor_comp);
+                    arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
+                    planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
+                    vtkViewer_comp.addActor(arrowActor_comp);
+                    vtkViewer_comp.addActor(planeActor_comp);
                 }
                 vectorIndex++;
-                vtkViewer2.removeActor(actor);
-                vtkViewer2.removeActor(planeActor);
-                actor = getArrowActor(gravity_vectors.at(vectorIndex));
-                planeActor = getPlaneActor(gravity_vectors.at(vectorIndex));
-                vtkViewer2.addActor(actor);
-                vtkViewer2.addActor(planeActor);
-            }
-            
-            vtkViewer2.render();
+                vtkViewer_madg.removeActor(arrowActor_madg);
+                vtkViewer_madg.removeActor(planeActor_madg);
+                arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
+                planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
+                vtkViewer_madg.addActor(arrowActor_madg);
+                vtkViewer_madg.addActor(planeActor_madg);
 
+                vtkViewer_gt.removeActor(arrowActor_gt);
+                vtkViewer_gt.removeActor(planeActor_gt);
+                arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
+                planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
+                vtkViewer_gt.addActor(arrowActor_gt);
+                vtkViewer_gt.addActor(planeActor_gt);
+
+                vtkViewer_comp.removeActor(arrowActor_comp);
+                vtkViewer_comp.removeActor(planeActor_comp);
+                arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
+                planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
+                vtkViewer_comp.addActor(arrowActor_comp);
+                vtkViewer_comp.addActor(planeActor_comp);
+            }
+
+            ImGui::Text("VTK Windows:");
+            ImGui::Checkbox("Ground Truth", &vtk_gt_open);
+            ImGui::Checkbox("Madgwick", &vtk_madg_open);
+            ImGui::Checkbox("Complementary", &vtk_comp_open);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        }
+        ImGui::End();
+
+        if(vtk_madg_open)
+        {
+            ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
+            ImGui::Begin("Madgwick Estimation", nullptr, VtkViewer::NoScrollFlags());
+            vtkViewer_madg.render();
+            ImGui::End();
+        }
+
+        if(vtk_gt_open)
+        {
+            ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
+            ImGui::Begin("Ground truth", nullptr, VtkViewer::NoScrollFlags());
+            vtkViewer_gt.render();
+            ImGui::End();
+        }
+
+        if(vtk_comp_open)
+        {
+            ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
+            ImGui::Begin("Complementary Estimation", nullptr, VtkViewer::NoScrollFlags());
+            vtkViewer_comp.render();
             ImGui::End();
         }
 
@@ -488,70 +541,4 @@ int main(int argc, char* argv[])
     glfwTerminate();
 
     return 0;
-
-    // int endTime = 200;
-    // double frameRate = 5;
-
-    // vtkNew<vtkNamedColors> colors;
-    // std::array<unsigned char, 4> bkg{{26, 51, 77, 255}};
-    // colors->SetColor("BkgColor", bkg.data());
-
-    // // Create the graphics structure. The renderer renders into the render window
-    // vtkNew<vtkRenderWindowInteractor> iren;
-    // vtkNew<vtkRenderer> ren1;
-    // vtkNew<vtkRenderWindow> renWin;
-    // renWin->SetMultiSamples(0);
-    // renWin->SetWindowName("Gravity Vector");
-    
-    // iren->SetRenderWindow(renWin);
-    // renWin->AddRenderer(ren1);
-    // // ren1->SetBackground(colors->GetColor3d("MistyRose").GetData());
-    // ren1->SetBackground(colors->GetColor3d("BkgColor").GetData());
-    // ren1->GetActiveCamera()->SetPosition(-1, 0, 0);
-    // ren1->GetActiveCamera()->SetFocalPoint(0, 0, 1.0);
-    // ren1->GetActiveCamera()->SetViewUp(0, 0, -1);    
-    
-    // renWin->SetSize(1200, 1200);
-    // renWin->Render();
-
-    // // iren->Start();
-
-    // // Create an Animation Scene
-    // vtkNew<vtkAnimationScene> scene;
-
-    // scene->SetModeToRealTime();
-    // // scene->SetModeToSequence();
-
-    // scene->SetLoop(0);
-    // scene->SetFrameRate(frameRate); // FPS
-    // scene->SetStartTime(0);
-    // scene->SetEndTime(endTime); // how many seconds for it to run for
- 
-    // // Create an Animation Cue
-    // vtkNew<vtkAnimationCue> cue1;
-    // cue1->SetStartTime(0);
-    // cue1->SetEndTime(endTime); // how many seconds for it to run for
-    // scene->AddCue(cue1);
-
-    // // Create cue animator
-    // CueAnimator animator;
-    // animator.setGrav(gravity_vectors);
-
-    // // Create Cue observer
-    // vtkNew<vtkAnimationCueObserver> observer;
-    // observer->Renderer = ren1;
-    // observer->Animator = &animator;
-    // observer->RenWin = renWin;
-    // observer->Inter = iren;
-
-    // cue1->AddObserver(vtkCommand::StartAnimationCueEvent, observer);
-    // cue1->AddObserver(vtkCommand::EndAnimationCueEvent, observer);
-    // cue1->AddObserver(vtkCommand::AnimationCueTickEvent, observer);
-    
-    // scene->Play();
-    // scene->Stop();
-
-    // // iren->Start();
-
-    // return EXIT_SUCCESS;
 }
