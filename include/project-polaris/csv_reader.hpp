@@ -120,17 +120,19 @@ class CsvReader
             float sum_head_comp_no_mag = 0.0;
 
             std::fstream afile(sPath + results_suffix + "/error_madg_mag.csv", std::ios::in);
-            // std::fstream afile(sPath, std::ios::in);
             std::string aline;
             if (afile.is_open())
             {
                 while (getline(afile, aline))
                 {
-                    rows++;
                     std::vector<float> a_split = split(aline, ',');
-                    sum_total_madg_mag += a_split.at(0)*a_split.at(0);
-                    sum_inc_madg_mag += a_split.at(1)*a_split.at(1);
-                    sum_head_madg_mag += a_split.at(2)*a_split.at(2);
+                    if(a_split.at(0) != 9999)
+                    {
+                        rows++;
+                        sum_total_madg_mag += a_split.at(0)*a_split.at(0);
+                        sum_inc_madg_mag += a_split.at(1)*a_split.at(1);
+                        sum_head_madg_mag += a_split.at(2)*a_split.at(2);
+                    }
                 }
             }
             else
@@ -145,9 +147,12 @@ class CsvReader
                 while (getline(wfile, gline))
                 {
                     std::vector<float> g_split = split(gline, ',');
-                    sum_total_madg_no_mag += g_split.at(0)*g_split.at(0);
-                    sum_inc_madg_no_mag += g_split.at(1)*g_split.at(1);
-                    sum_head_madg_no_mag += g_split.at(2)*g_split.at(2);
+                    if(g_split.at(0) != 9999)
+                    {
+                        sum_total_madg_no_mag += g_split.at(0)*g_split.at(0);
+                        sum_inc_madg_no_mag += g_split.at(1)*g_split.at(1);
+                        sum_head_madg_no_mag += g_split.at(2)*g_split.at(2);
+                    }
                 }
             }
             else
@@ -162,9 +167,12 @@ class CsvReader
                 while (getline(mfile, mline))
                 {
                     std::vector<float> m_split = split(mline, ',');
-                    sum_total_comp_mag += m_split.at(0)*m_split.at(0);
-                    sum_inc_comp_mag += m_split.at(1)*m_split.at(1);
-                    sum_head_comp_mag += m_split.at(2)*m_split.at(2);
+                    if(m_split.at(0) != 9999)
+                    {
+                        sum_total_comp_mag += m_split.at(0)*m_split.at(0);
+                        sum_inc_comp_mag += m_split.at(1)*m_split.at(1);
+                        sum_head_comp_mag += m_split.at(2)*m_split.at(2);
+                    }
                 }
             }
             else
@@ -179,9 +187,12 @@ class CsvReader
                 while (getline(file, line))
                 {
                     std::vector<float> gt_split = split(line, ',');
-                    sum_total_comp_no_mag += gt_split.at(0)*gt_split.at(0);
-                    sum_inc_comp_no_mag += gt_split.at(1)*gt_split.at(1);
-                    sum_head_comp_no_mag += gt_split.at(2)*gt_split.at(2);
+                    if(gt_split.at(0) != 9999)
+                    {
+                        sum_total_comp_no_mag += gt_split.at(0)*gt_split.at(0);
+                        sum_inc_comp_no_mag += gt_split.at(1)*gt_split.at(1);
+                        sum_head_comp_no_mag += gt_split.at(2)*gt_split.at(2);
+                    }
                 }
             }
             else

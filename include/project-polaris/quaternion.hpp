@@ -104,4 +104,9 @@ class Quaternion
 
             return result;
         }
+
+        bool isNaN()
+        {
+            return (isnan(q_1) || isnan(q_2) || isnan(q_3) || isnan(q_4));
+        }
 };

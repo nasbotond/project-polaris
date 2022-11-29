@@ -38,7 +38,7 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, const int &start_index, const int &end_index, std::vector<std::vector<double>> &gravity_vectors_madg,
+void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, int &start_index, const int &end_index, std::vector<std::vector<double>> &gravity_vectors_madg,
  std::vector<std::vector<double>> &gravity_vectors_gt, std::vector<std::vector<double>> &gravity_vectors_comp, std::string &results_suffix)
 {
         float deltat = 1.0f/(float)freq;
@@ -81,6 +81,11 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
 
     // euler_diff.open ("../results/euler_diff.csv");
 
+    if(start_index < 1)
+    {
+        start_index = 1;
+        
+    }
     Quaternion initial_state = Quaternion::getOrientationFromAccMag(a.at(start_index-1), m.at(start_index-1));
     comp_mag.setInitialState(initial_state);
     madg_mag.setInitialState(initial_state);
@@ -106,15 +111,25 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
         // Quaternion err_quat = Metrics::error_quaternion_earth(read.gt.at(i), madg_mag.q);
         // Quaternion err_quat = Metrics::error_quaternion(read.gt.at(i), enu_est);
         // These are in ENU
-        Quaternion err_quat_madg_mag = Metrics::error_quaternion_earth(gt.at(i), madg_mag.q);
-        Quaternion err_quat_madg_no_mag = Metrics::error_quaternion_earth(gt.at(i), madg.q);
-        Quaternion err_quat_comp_mag = Metrics::error_quaternion_earth(gt.at(i), comp_mag.q);
-        Quaternion err_quat_comp_no_mag = Metrics::error_quaternion_earth(gt.at(i), comp.q);
+        if(!gt.at(i).isNaN())
+        {
+            Quaternion err_quat_madg_mag = Metrics::error_quaternion_earth(gt.at(i), madg_mag.q);
+            Quaternion err_quat_madg_no_mag = Metrics::error_quaternion_earth(gt.at(i), madg.q);
+            Quaternion err_quat_comp_mag = Metrics::error_quaternion_earth(gt.at(i), comp_mag.q);
+            Quaternion err_quat_comp_no_mag = Metrics::error_quaternion_earth(gt.at(i), comp.q);
 
-        error_madg_mag << Metrics::total_error(err_quat_madg_mag) << "," << Metrics::inclination_error(err_quat_madg_mag) << "," << Metrics::heading_error(err_quat_madg_mag) << "\n";
-        error_madg_no_mag << Metrics::total_error(err_quat_madg_no_mag) << "," << Metrics::inclination_error(err_quat_madg_no_mag) << "," << Metrics::heading_error(err_quat_madg_no_mag) << "\n";
-        error_comp_mag << Metrics::total_error(err_quat_comp_mag) << "," << Metrics::inclination_error(err_quat_comp_mag) << "," << Metrics::heading_error(err_quat_comp_mag) << "\n";
-        error_comp_no_mag << Metrics::total_error(err_quat_comp_no_mag) << "," << Metrics::inclination_error(err_quat_comp_no_mag) << "," << Metrics::heading_error(err_quat_comp_no_mag) << "\n";
+            error_madg_mag << Metrics::total_error(err_quat_madg_mag) << "," << Metrics::inclination_error(err_quat_madg_mag) << "," << Metrics::heading_error(err_quat_madg_mag) << "\n";
+            error_madg_no_mag << Metrics::total_error(err_quat_madg_no_mag) << "," << Metrics::inclination_error(err_quat_madg_no_mag) << "," << Metrics::heading_error(err_quat_madg_no_mag) << "\n";
+            error_comp_mag << Metrics::total_error(err_quat_comp_mag) << "," << Metrics::inclination_error(err_quat_comp_mag) << "," << Metrics::heading_error(err_quat_comp_mag) << "\n";
+            error_comp_no_mag << Metrics::total_error(err_quat_comp_no_mag) << "," << Metrics::inclination_error(err_quat_comp_no_mag) << "," << Metrics::heading_error(err_quat_comp_no_mag) << "\n";
+        }
+        else
+        {
+            error_madg_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+            error_madg_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+            error_comp_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+            error_comp_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+        }        
 
         // float roll_diff = Metrics::euler_roll_diff(read.gt.at(i), madg_mag.q);
         // float pitch_diff = Metrics::euler_pitch_diff(read.gt.at(i), madg_mag.q);
@@ -129,13 +144,11 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
         float myaw = enu_est.yaw();
         float mpitch = enu_est.pitch();
         float mroll = enu_est.roll();
-        // gravity_vectors_madg.push_back({-sin(mpitch), cos(mpitch)*sin(mroll), -cos(mpitch)*cos(mroll)});
         gravity_vectors_madg.push_back({mroll, mpitch, myaw});
 
         float gyaw = gt.at(i).yaw();
         float gpitch = gt.at(i).pitch();
         float groll = gt.at(i).roll();
-        // gravity_vectors_gt.push_back({-sin(gpitch), cos(gpitch)*sin(groll), -cos(gpitch)*cos(groll)});
         gravity_vectors_gt.push_back({groll, gpitch, gyaw});
 
         // TODO: Something wrong here, is it in ENU?
@@ -143,7 +156,6 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
         float cyaw = enu_comp.yaw();
         float cpitch = enu_comp.pitch();
         float croll = enu_comp.roll();
-        // gravity_vectors_comp.push_back({-sin(cpitch), cos(cpitch)*sin(croll), -cos(cpitch)*cos(croll)});
         gravity_vectors_comp.push_back({croll, cpitch, cyaw});
     }
 
@@ -330,11 +342,10 @@ int main(int argc, char* argv[])
 
                     std::string results_suffix = "_" + std::to_string(freq) + "_" + std::to_string(comp_gain) + "_" + std::to_string(madg_beta) + "_" + std::to_string(start_index) + "_" + std::to_string(end_index);
 
-                    std::cout << fPath << std::endl;
                     std::string str = fPath.substr(0, fPath.length()-2);
                     char ch = '/';            
                     size_t index = str.rfind(ch);
-                    std::cout << index << std::endl;
+
                     if (index != std::string::npos) 
                     {
                         results_suffix = "out_" + fPath.substr(index+1, fPath.length()-2) + results_suffix;
