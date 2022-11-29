@@ -89,12 +89,10 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
 
     for (int i = start_index; i < end_index+1; ++i)
     {
-        // with Magnetometer
         comp_mag.updateFilter(w.at(i), a.at(i), m.at(i));
-        madg_mag.updateMARGFilter(w.at(i), a.at(i), m.at(i));
-
-        // without Magnetometer
         comp.updateFilter(w.at(i), a.at(i));
+
+        madg_mag.updateMARGFilter(w.at(i), a.at(i), m.at(i));        
         madg.updateIMUFilter(w.at(i), a.at(i));
 
         est_madg_mag << madg_mag.q.q_1 << "," << madg_mag.q.q_2 << "," << madg_mag.q.q_3 << "," << madg_mag.q.q_4 << "\n";
@@ -142,9 +140,9 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
 
         // TODO: Something wrong here, is it in ENU?
         Quaternion enu_comp = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), comp_mag.q);
-        float cyaw = comp_mag.q.yaw();
-        float cpitch = comp_mag.q.pitch();
-        float croll = comp_mag.q.roll();
+        float cyaw = enu_comp.yaw();
+        float cpitch = enu_comp.pitch();
+        float croll = enu_comp.roll();
         // gravity_vectors_comp.push_back({-sin(cpitch), cos(cpitch)*sin(croll), -cos(cpitch)*cos(croll)});
         gravity_vectors_comp.push_back({croll, cpitch, cyaw});
     }
@@ -189,6 +187,7 @@ int main(int argc, char* argv[])
 
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
+    
     if (!glfwInit())
     {
         return 1;
