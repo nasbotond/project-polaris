@@ -129,7 +129,7 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
             error_madg_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
             error_comp_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
             error_comp_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
-        }        
+        }
 
         // float roll_diff = Metrics::euler_roll_diff(read.gt.at(i), madg_mag.q);
         // float pitch_diff = Metrics::euler_pitch_diff(read.gt.at(i), madg_mag.q);
@@ -476,9 +476,61 @@ int main(int argc, char* argv[])
                         isPlaying = true;
                     }
 
+                    if(ImGui::Button("Previous Index"))
+                    {
+                        if(vectorIndex < 1)
+                        {
+                            vectorIndex = gravity_vectors_madg.size()-1;
+                            vtkViewer_madg.removeActor(arrowActor_madg);
+                            vtkViewer_madg.removeActor(planeActor_madg);
+                            arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
+                            planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
+                            vtkViewer_madg.addActor(arrowActor_madg);
+                            vtkViewer_madg.addActor(planeActor_madg);
+
+                            vtkViewer_gt.removeActor(arrowActor_gt);
+                            vtkViewer_gt.removeActor(planeActor_gt);
+                            arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
+                            planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
+                            vtkViewer_gt.addActor(arrowActor_gt);
+                            vtkViewer_gt.addActor(planeActor_gt);
+
+                            vtkViewer_comp.removeActor(arrowActor_comp);
+                            vtkViewer_comp.removeActor(planeActor_comp);
+                            arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
+                            planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
+                            vtkViewer_comp.addActor(arrowActor_comp);
+                            vtkViewer_comp.addActor(planeActor_comp);
+                        }
+                        else
+                        {
+                            vectorIndex--;
+                            vtkViewer_madg.removeActor(arrowActor_madg);
+                            vtkViewer_madg.removeActor(planeActor_madg);
+                            arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
+                            planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
+                            vtkViewer_madg.addActor(arrowActor_madg);
+                            vtkViewer_madg.addActor(planeActor_madg);
+
+                            vtkViewer_gt.removeActor(arrowActor_gt);
+                            vtkViewer_gt.removeActor(planeActor_gt);
+                            arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
+                            planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
+                            vtkViewer_gt.addActor(arrowActor_gt);
+                            vtkViewer_gt.addActor(planeActor_gt);
+
+                            vtkViewer_comp.removeActor(arrowActor_comp);
+                            vtkViewer_comp.removeActor(planeActor_comp);
+                            arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
+                            planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
+                            vtkViewer_comp.addActor(arrowActor_comp);
+                            vtkViewer_comp.addActor(planeActor_comp);
+                        }
+                    }
+                    ImGui::SameLine();
+
                     if(ImGui::Button("Next Index"))
                     {
-                        // std::cout << gravity_vectors.at(vectorIndex).at(0) << " " << gravity_vectors.at(vectorIndex).at(1) << " " << gravity_vectors.at(vectorIndex).at(2) << std::endl;
                         if(vectorIndex >= gravity_vectors_madg.size()-1) 
                         {
                             vectorIndex = 0;

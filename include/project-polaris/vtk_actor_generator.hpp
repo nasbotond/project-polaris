@@ -32,7 +32,9 @@ static vtkSmartPointer<vtkActor> getArrowActor(std::vector<double> vector)
     // double endPoint[3] = {0.0, 0.0, 1.0};
     float x = -sin(vector.at(1));
     float y = cos(vector.at(1))*sin(vector.at(0));
-    float z = -cos(vector.at(1))*cos(vector.at(0));
+    // Negate z to make arrow point down (towards the earth)
+    float z = cos(vector.at(1))*cos(vector.at(0));
+
     double endPoint[3] = {x, y, z};
     vtkNew<vtkMinimalStandardRandomSequence> rng;
 
@@ -96,15 +98,15 @@ static vtkSmartPointer<vtkActor> getPlaneActor(std::vector<double> vector)
     // PLANE
     // Create a plane
     planeSource->SetOrigin(0.0, 0.0, 0.0);
-    planeSource->SetPoint1(0.5, 0.0, 0.0);
-    planeSource->SetPoint2(0.0, 0.25, 0.0);
+    planeSource->SetPoint1(0.5*cos(vector.at(1))*cos(vector.at(2)), 0.5*(cos(vector.at(2))*sin(vector.at(1))*sin(vector.at(0)) - cos(vector.at(0))*sin(vector.at(2))), 0.5*(cos(vector.at(0))*cos(vector.at(2))*sin(vector.at(1)) + sin(vector.at(0))*sin(vector.at(2))));
+    planeSource->SetPoint2(0.25*cos(vector.at(1))*sin(vector.at(2)), 0.25*(cos(vector.at(0))*cos(vector.at(2)) + sin(vector.at(1))*sin(vector.at(0))*sin(vector.at(2))), 0.25*(cos(vector.at(0))*sin(vector.at(1))*sin(vector.at(2)) - cos(vector.at(2))*sin(vector.at(0))));
     planeSource->SetCenter(0.0, 0.0, 0.0);
 
-    float x = -sin(vector.at(1));
-    float y = cos(vector.at(1))*sin(vector.at(0));
-    float z = -cos(vector.at(1))*cos(vector.at(0));
+    // float x = -sin(vector.at(1));
+    // float y = cos(vector.at(1))*sin(vector.at(0));
+    // float z = -cos(vector.at(1))*cos(vector.at(0));
     
-    planeSource->SetNormal(x, y, z);    
+    // planeSource->SetNormal(x, y, z);
     planeSource->Update();
 
     vtkSmartPointer<vtkPolyData> plane = planeSource->GetOutput();
