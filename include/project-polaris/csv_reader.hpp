@@ -205,6 +205,14 @@ class CsvReader
             result.at(2) = Vec3(sqrt(sum_total_comp_mag/rows), sqrt(sum_inc_comp_mag/rows), sqrt(sum_head_comp_mag/rows));
             result.at(3) = Vec3(sqrt(sum_total_comp_no_mag/rows), sqrt(sum_inc_comp_no_mag/rows), sqrt(sum_head_comp_no_mag/rows));
 
+            std::ofstream rmse_out;
+            rmse_out.open (sPath + results_suffix + "/rmse_out.csv");
+            for (int i = 0; i < result.size(); ++i) 
+            {  
+                rmse_out << result.at(i).to_string() << "\n";
+            }
+            rmse_out.close();
+
             return result;
         }
 };
