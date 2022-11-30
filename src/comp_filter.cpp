@@ -35,11 +35,6 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
     // q_am.q_4 = cos(0.5*theta)*cos(0.5*phi)*sin(0.5*psi) - sin(0.5*theta)*sin(0.5*phi)*cos(0.5*psi);
 
     q_am = Quaternion::getOrientationFromAccMag(a, m);
-
-    // std::cout << "q1: " << q_am.q_1 << std::endl;
-    // std::cout << "q2: " << q_am.q_2 << std::endl;
-    // std::cout << "q3: " << q_am.q_3 << std::endl;
-    // std::cout << "q4: " << q_am.q_4 << std::endl;
     
     // Vec3 Rz = a;
     // Rz.norm();
@@ -47,12 +42,13 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
     // // Vec3 Rx = Vec3::cross(m, Rz);
     // // Vec3 Ry = Vec3::cross(Rz, Rx);
     // // NED
-    // Vec3 Ry = Vec3::cross(Rz, m);
-    // Vec3 Rx = Vec3::cross(Ry, Rz);
+    // Vec3 tmp = Vec3::cross(Rz, m);
+    // Vec3 Rx = Vec3::cross(tmp, Rz);
+    // Vec3 Ry = Vec3::cross(Rz, Rx);
     // Ry.norm();
     // Rx.norm();
 
-    // // Chiaverini method
+    // // // Chiaverini method
     // q_am.q_1 = (Rx.x + Ry.y + Rz.z + 1.0) > 0.0 ? 0.5 * sqrt(Rx.x + Ry.y + Rz.z + 1.0) : 1.0;
     // q_am.q_2 = 0.5 * sgn(Rz.y - Ry.z) * sqrt(std::clamp(Rx.x - Ry.y - Rz.z, -1.0f, 1.0f) + 1.0);
     // q_am.q_3 = 0.5 * sgn(Rx.z - Rz.x) * sqrt(std::clamp(Ry.y - Rz.z - Rx.x, -1.0f, 1.0f) + 1.0);
@@ -67,10 +63,20 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
 
     q_omega.norm();
 
-    q.q_1 = q_omega.q_1 * one_minus_gain - gain*(q_am.q_1);
-    q.q_2 = q_omega.q_2 * one_minus_gain - gain*(q_am.q_2);
-    q.q_3 = q_omega.q_3 * one_minus_gain - gain*(q_am.q_3);
-    q.q_4 = q_omega.q_4 * one_minus_gain - gain*(q_am.q_4);
+    if(sqrt((q_omega.q_1+q_am.q_1)*(q_omega.q_1+q_am.q_1) + (q_omega.q_2+q_am.q_2)*(q_omega.q_2+q_am.q_2) + (q_omega.q_3+q_am.q_3)*(q_omega.q_3+q_am.q_3) + (q_omega.q_4+q_am.q_4)*(q_omega.q_4+q_am.q_4)) < sqrt(2))
+    {
+        q.q_1 = q_omega.q_1 * one_minus_gain - gain*(q_am.q_1);
+        q.q_2 = q_omega.q_2 * one_minus_gain - gain*(q_am.q_2);
+        q.q_3 = q_omega.q_3 * one_minus_gain - gain*(q_am.q_3);
+        q.q_4 = q_omega.q_4 * one_minus_gain - gain*(q_am.q_4);
+    }
+    else
+    {
+        q.q_1 = q_omega.q_1 * one_minus_gain + gain*(q_am.q_1);
+        q.q_2 = q_omega.q_2 * one_minus_gain + gain*(q_am.q_2);
+        q.q_3 = q_omega.q_3 * one_minus_gain + gain*(q_am.q_3);
+        q.q_4 = q_omega.q_4 * one_minus_gain + gain*(q_am.q_4);
+    }    
 
     q.norm();
 }
@@ -81,32 +87,52 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a)
     float one_minus_gain = 1 - gain;
 
     Quaternion q_omega = Quaternion(0, 0, 0, 0);
-    Quaternion q_am = Quaternion(0, 0, 0, 0);
+    Quaternion q_am = Quaternion(1.0, 0, 0, 0);
 
     float half_q_1 = 0.5 * q.q_1;
     float half_q_2 = 0.5 * q.q_2;
     float half_q_3 = 0.5 * q.q_3;
     float half_q_4 = 0.5 * q.q_4;
 
-    float phi = atan2(a.y, a.z); // roll
-    float theta = atan2(-a.x, sqrt((a.y*a.y + a.z*a.z))); // pitch
-    
-    float psi = 0; // yaw
+    Vec3 acc = a;
+    if((acc.x*acc.x + acc.y*acc.y + acc.z*acc.z) > 0)
+    {
+        acc.norm();
 
-    q_am.q_1 = cos(0.5*theta)*cos(0.5*phi)*cos(0.5*psi) + sin(0.5*theta)*sin(0.5*phi)*sin(0.5*psi);
-    q_am.q_2 = sin(0.5*theta)*cos(0.5*phi)*cos(0.5*psi) - cos(0.5*theta)*sin(0.5*phi)*sin(0.5*psi);
-    q_am.q_3 = cos(0.5*theta)*sin(0.5*phi)*cos(0.5*psi) + sin(0.5*theta)*cos(0.5*phi)*sin(0.5*psi);
-    q_am.q_4 = cos(0.5*theta)*cos(0.5*phi)*sin(0.5*psi) - sin(0.5*theta)*sin(0.5*phi)*cos(0.5*psi);
+        float theta = atan2(acc.y, acc.z); // roll
+        float phi = atan2(-acc.x, sqrt((acc.y*acc.y + acc.z*acc.z))); // pitch
+        
+        float psi = 0; // yaw
 
-    q_omega.q_1 = -half_q_2 * w.x - half_q_3 * w.y - half_q_4 * w.z;
-    q_omega.q_2 = half_q_1 * w.x + half_q_3 * w.z - half_q_4 * w.y;
-    q_omega.q_3 = half_q_1 * w.y - half_q_2 * w.z + half_q_4 * w.x;
-    q_omega.q_4 = half_q_1 * w.z + half_q_2 * w.y - half_q_3 * w.x;
+        q_am.q_1 = cos(0.5*theta)*cos(0.5*phi);
+        q_am.q_2 = sin(0.5*theta)*cos(0.5*phi);
+        q_am.q_3 = cos(0.5*theta)*sin(0.5*phi);
+        q_am.q_4 = -sin(0.5*theta)*sin(0.5*phi);
 
-    q.q_1 = (q.q_1 + (q_omega.q_1 * deltat)) * one_minus_gain - gain*(q_am.q_1);
-    q.q_2 = (q.q_2 + (q_omega.q_2 * deltat)) * one_minus_gain - gain*(q_am.q_2);
-    q.q_3 = (q.q_3 + (q_omega.q_3 * deltat)) * one_minus_gain - gain*(q_am.q_3);
-    q.q_4 = (q.q_4 + (q_omega.q_4 * deltat)) * one_minus_gain - gain*(q_am.q_4);
+        q_am.norm();
+    }
+
+    q_omega.q_1 = q.q_1 + (-half_q_2 * w.x - half_q_3 * w.y - half_q_4 * w.z)*deltat;
+    q_omega.q_2 = q.q_2 + (half_q_1 * w.x + half_q_3 * w.z - half_q_4 * w.y)*deltat;
+    q_omega.q_3 = q.q_3 + (half_q_1 * w.y - half_q_2 * w.z + half_q_4 * w.x)*deltat;
+    q_omega.q_4 = q.q_4 + (half_q_1 * w.z + half_q_2 * w.y - half_q_3 * w.x)*deltat;
+
+    q_omega.norm();
+
+    if(sqrt((q_omega.q_1+q_am.q_1)*(q_omega.q_1+q_am.q_1) + (q_omega.q_2+q_am.q_2)*(q_omega.q_2+q_am.q_2) + (q_omega.q_3+q_am.q_3)*(q_omega.q_3+q_am.q_3) + (q_omega.q_4+q_am.q_4)*(q_omega.q_4+q_am.q_4)) < sqrt(2))
+    {
+        q.q_1 = q_omega.q_1 * one_minus_gain - gain*(q_am.q_1);
+        q.q_2 = q_omega.q_2 * one_minus_gain - gain*(q_am.q_2);
+        q.q_3 = q_omega.q_3 * one_minus_gain - gain*(q_am.q_3);
+        q.q_4 = q_omega.q_4 * one_minus_gain - gain*(q_am.q_4);
+    }
+    else
+    {
+        q.q_1 = q_omega.q_1 * one_minus_gain + gain*(q_am.q_1);
+        q.q_2 = q_omega.q_2 * one_minus_gain + gain*(q_am.q_2);
+        q.q_3 = q_omega.q_3 * one_minus_gain + gain*(q_am.q_3);
+        q.q_4 = q_omega.q_4 * one_minus_gain + gain*(q_am.q_4);
+    }
 
     q.norm();
 }

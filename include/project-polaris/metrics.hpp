@@ -32,10 +32,10 @@ class Metrics
             return error_q;
         }
 
-        static Quaternion error_quaternion_earth(Quaternion &gt, Quaternion &est)
+        static Quaternion error_quaternion_earth(Quaternion &gt, Quaternion &est_enu)
         {
             // Make sure earth frame is in ENU
-            Quaternion est_enu = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2.0), 0.0, 0.0, 1.0/sqrt(2.0)), est);
+            // Quaternion est_enu = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2.0), 0.0, 0.0, 1.0/sqrt(2.0)), est);
             Quaternion gt_inv = inv(gt);
             Quaternion error_q = hamiltonProduct(est_enu, gt_inv);
             error_q.norm();
