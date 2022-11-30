@@ -33,12 +33,28 @@
 char const* selectedfolderPath;
 std::string fPath;
 
+static std::string _labelPrefix(const char* const label)
+{
+	float width = ImGui::CalcItemWidth();
+
+	float x = ImGui::GetCursorPosX();
+	ImGui::Text("%s", label); 
+	ImGui::SameLine(); 
+	ImGui::SetCursorPosX(x + width * 0.6f + ImGui::GetStyle().ItemInnerSpacing.x);
+	ImGui::SetNextItemWidth(-1);
+
+	std::string labelID = "##";
+	labelID += label;
+
+	return labelID;
+}
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, int &start_index, const int &end_index, std::vector<std::vector<double>> &gravity_vectors_madg,
+void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, int &start_index, int &end_index, const bool &max_index, std::vector<std::vector<double>> &gravity_vectors_madg,
  std::vector<std::vector<double>> &gravity_vectors_gt, std::vector<std::vector<double>> &gravity_vectors_comp, std::string &results_suffix)
 {
         float deltat = 1.0f/(float)freq;
@@ -87,6 +103,10 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
     comp.setInitialState(initial_state);
     madg.setInitialState(initial_state);
 
+    if(max_index)
+    {
+        end_index = a.size()-1;
+    }
     for (int i = start_index; i < end_index+1; ++i)
     {
         comp_mag.updateFilter(w.at(i), a.at(i), m.at(i));
@@ -299,6 +319,8 @@ int main(int argc, char* argv[])
 
     static bool is_calculated = false;
     static int vector_index = 0;
+    static bool min_index = true;
+    static bool max_index = true;
 
     // static bool show_style_editor = false;
     // static bool show_demo_window = false;
@@ -352,20 +374,29 @@ int main(int argc, char* argv[])
 
             ImGui::Text("%s", fPath.c_str());
 
-            static int start_index = 10000;
-            ImGui::InputInt("Starting index", &start_index);
+            static int start_index = 0;
+            ImGui::Checkbox(_labelPrefix("From first:").c_str(), &min_index);
+            if(!min_index) 
+            {
+                ImGui::InputInt(_labelPrefix("  Range from:").c_str(), &start_index); 
+            }
 
             static int end_index = 45000;
-            ImGui::InputInt("Ending index", &end_index);
+            ImGui::Checkbox(_labelPrefix("To last:").c_str(), &max_index);
+            if(!max_index)
+            { 
+                ImGui::InputInt(_labelPrefix("  Range to:").c_str(), &end_index); 
+            }
+            
 
             static int freq = 286;
-            ImGui::InputInt("Sample frequency", &freq);
+            ImGui::InputInt(_labelPrefix("Sample frequency:").c_str(), &freq);
 
             static float comp_gain = 0.2f;
-            ImGui::InputFloat("Comp. gain", &comp_gain, 0.01f, 1.0f, "%.3f");
+            ImGui::InputFloat(_labelPrefix("Comp. filter gain:").c_str(), &comp_gain, 0.01f, 1.0f, "%.3f");
 
             static float madg_beta = 0.2f;
-            ImGui::InputFloat("Madg. beta", &madg_beta, 0.01f, 1.0f, "%.3f");
+            ImGui::InputFloat(_labelPrefix("Madg. filter beta").c_str(), &madg_beta, 0.01f, 1.0f, "%.3f");
 
             if(ImGui::Button("Calculate"))
             {
@@ -389,8 +420,13 @@ int main(int argc, char* argv[])
                     {
                         results_suffix = "out" + results_suffix;
                     }
+
+                    if(min_index)
+                    {
+                        start_index = 0;
+                    }
                 
-                    runFilter(freq, comp_gain, madg_beta, start_index, end_index, gravity_vectors_madg, gravity_vectors_gt, gravity_vectors_comp, results_suffix);
+                    runFilter(freq, comp_gain, madg_beta, start_index, end_index, max_index, gravity_vectors_madg, gravity_vectors_gt, gravity_vectors_comp, results_suffix);
 
                     vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(0));
                     vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(0));
@@ -406,6 +442,7 @@ int main(int argc, char* argv[])
                     ImGui::OpenPopup("No data, no problem...?");
                 }
             }
+            ImGui::Text("");
 
             // Always center this window when appearing
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -426,7 +463,7 @@ int main(int argc, char* argv[])
                 auto renderer_gt = vtk_viewer_gt.getRenderer();
                 auto renderer_comp = vtk_viewer_comp.getRenderer();
 
-                ImGui::Checkbox("Black background", &black_background);
+                ImGui::Checkbox(_labelPrefix("Black background:").c_str(), &black_background);
                 if(black_background)
                 {
                     // Set background to black
@@ -443,21 +480,21 @@ int main(int argc, char* argv[])
                 }
             
                 static float vtk2BkgAlpha = 0.2f;
-                ImGui::SliderFloat("Background Alpha", &vtk2BkgAlpha, 0.0f, 1.0f);
+                ImGui::SliderFloat(_labelPrefix("Background alpha:").c_str(), &vtk2BkgAlpha, 0.0f, 1.0f);
                 renderer->SetBackgroundAlpha(vtk2BkgAlpha);
                 renderer_gt->SetBackgroundAlpha(vtk2BkgAlpha);
                 renderer_comp->SetBackgroundAlpha(vtk2BkgAlpha);
 
                 if(is_manual_playback)
                 {
-                    if(ImGui::SliderInt("Vector Index", &vector_index, 0, gravity_vectors_madg.size()-1))
+                    if(ImGui::SliderInt(_labelPrefix("Vector index:").c_str(), &vector_index, 0, gravity_vectors_madg.size()-1))
                     {
                         vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
                         vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
                         vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                     }
 
-                    ImGui::Checkbox("Loop", &loop);
+                    ImGui::Checkbox(_labelPrefix("Loop:").c_str(), &loop);
                     if(is_playing)
                     {
                         if(ImGui::Button("Stop")) 
@@ -469,8 +506,9 @@ int main(int argc, char* argv[])
                     {
                         is_playing = true;
                     }
+                    ImGui::SameLine();
 
-                    if(ImGui::Button("Previous Index"))
+                    if(ImGui::Button("Previous index"))
                     {
                         if(vector_index < 1)
                         {
@@ -489,7 +527,7 @@ int main(int argc, char* argv[])
                     }
                     ImGui::SameLine();
 
-                    if(ImGui::Button("Next Index"))
+                    if(ImGui::Button("Next index"))
                     {
                         if(vector_index >= gravity_vectors_madg.size()-1) 
                         {
@@ -529,10 +567,12 @@ int main(int argc, char* argv[])
                     vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                 }
 
+                ImGui::Text("");
                 ImGui::Text("Show vector visualization windows:");
-                ImGui::Checkbox("Ground truth", &vtk_gt_open);
-                ImGui::Checkbox("Madgwick Filter estimation", &vtk_madg_open);
-                ImGui::Checkbox("Complementary filter estimation", &vtk_comp_open);
+                ImGui::Checkbox(_labelPrefix("Ground truth:").c_str(), &vtk_gt_open);
+                ImGui::Checkbox(_labelPrefix("Madg. filter estimation:").c_str(), &vtk_madg_open);
+                ImGui::Checkbox(_labelPrefix("Comp. filter estimation:").c_str(), &vtk_comp_open);
+                ImGui::Text("");
 
                 ImGui::Text("RMSE Values (degrees): ");
                 if(ImGui::BeginTable("table1", 5))
@@ -572,9 +612,10 @@ int main(int argc, char* argv[])
                     }
                     ImGui::EndTable();
                 }
-
-                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             }
+
+            ImGui::Text("\nApplication average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
             ImGui::End();
         }
 
