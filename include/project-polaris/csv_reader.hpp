@@ -16,9 +16,6 @@
 
 class CsvReader
 {
-    // private:
-    //     std::string sPath;
-
     public:
 
         /**
@@ -209,7 +206,7 @@ class CsvReader
             rmse_out.open (sPath + results_suffix + "/rmse_out.csv");
             for (int i = 0; i < result.size(); ++i) 
             {  
-                rmse_out << result.at(i).to_string() << "\n";
+                rmse_out << result.at(i).to_csv_string() << "\n";
             }
             rmse_out.close();
 

@@ -188,6 +188,10 @@ int main(int argc, char* argv[])
     vtkSmartPointer<vtkActor> arrowActor_comp;
     vtkSmartPointer<vtkActor> planeActor_comp;
 
+    vtkSmartPointer<vtkActorCollection> actors_madg = vtkSmartPointer<vtkActorCollection>::New();
+    vtkSmartPointer<vtkActorCollection> actors_gt = vtkSmartPointer<vtkActorCollection>::New();
+    vtkSmartPointer<vtkActorCollection> actors_comp = vtkSmartPointer<vtkActorCollection>::New();
+
     // AXES
     auto transformA = vtkSmartPointer<vtkTransform>::New();
     transformA->Translate(0.0, 0.0, 0.0);
@@ -329,7 +333,6 @@ int main(int argc, char* argv[])
             {
                 if(fPath.length() != 0)
                 {
-                    // ImGui::OpenPopup("ERROR");
                     vtkViewer_madg.removeActor(arrowActor_madg);
                     vtkViewer_madg.removeActor(planeActor_madg);
                     vtkViewer_gt.removeActor(arrowActor_gt);
@@ -365,19 +368,25 @@ int main(int argc, char* argv[])
                     arrowActor_comp = getArrowActor(gravity_vectors_comp.at(0));
                     planeActor_comp = getPlaneActor(gravity_vectors_comp.at(0));
 
+                    actors_madg->AddItem(arrowActor_madg);
+                    actors_madg->AddItem(planeActor_madg);
+
+                    actors_gt->AddItem(arrowActor_gt);
+                    actors_gt->AddItem(planeActor_gt);
+
+                    actors_comp->AddItem(arrowActor_comp);
+                    actors_comp->AddItem(planeActor_comp);
+
                     vtkViewer_madg.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                    vtkViewer_madg.addActor(arrowActor_madg);
-                    vtkViewer_madg.addActor(planeActor_madg);
+                    vtkViewer_madg.addActors(actors_madg);
                     vtkViewer_madg.addActor(axes);
 
                     vtkViewer_gt.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                    vtkViewer_gt.addActor(arrowActor_gt);
-                    vtkViewer_gt.addActor(planeActor_gt);
+                    vtkViewer_gt.addActors(actors_gt);
                     vtkViewer_gt.addActor(axes);
 
                     vtkViewer_comp.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                    vtkViewer_comp.addActor(arrowActor_comp);
-                    vtkViewer_comp.addActor(planeActor_comp);
+                    vtkViewer_comp.addActors(actors_comp);
                     vtkViewer_comp.addActor(axes);
 
                     rmse = CsvReader::getRMSE(fPath, results_suffix);
@@ -441,26 +450,9 @@ int main(int argc, char* argv[])
                 {
                     if(ImGui::SliderInt("Vector Index", &vectorIndex, 0, gravity_vectors_madg.size()-1))
                     {
-                        vtkViewer_madg.removeActor(arrowActor_madg);
-                        vtkViewer_madg.removeActor(planeActor_madg);
-                        arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
-                        planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
-                        vtkViewer_madg.addActor(arrowActor_madg);
-                        vtkViewer_madg.addActor(planeActor_madg);
-
-                        vtkViewer_gt.removeActor(arrowActor_gt);
-                        vtkViewer_gt.removeActor(planeActor_gt);
-                        arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
-                        planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
-                        vtkViewer_gt.addActor(arrowActor_gt);
-                        vtkViewer_gt.addActor(planeActor_gt);
-
-                        vtkViewer_comp.removeActor(arrowActor_comp);
-                        vtkViewer_comp.removeActor(planeActor_comp);
-                        arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
-                        planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
-                        vtkViewer_comp.addActor(arrowActor_comp);
-                        vtkViewer_comp.addActor(planeActor_comp);
+                        vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
+                        vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
+                        vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
                     }
 
                     ImGui::Checkbox("Loop", &loop);
@@ -481,50 +473,16 @@ int main(int argc, char* argv[])
                         if(vectorIndex < 1)
                         {
                             vectorIndex = gravity_vectors_madg.size()-1;
-                            vtkViewer_madg.removeActor(arrowActor_madg);
-                            vtkViewer_madg.removeActor(planeActor_madg);
-                            arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
-                            planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
-                            vtkViewer_madg.addActor(arrowActor_madg);
-                            vtkViewer_madg.addActor(planeActor_madg);
-
-                            vtkViewer_gt.removeActor(arrowActor_gt);
-                            vtkViewer_gt.removeActor(planeActor_gt);
-                            arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
-                            planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
-                            vtkViewer_gt.addActor(arrowActor_gt);
-                            vtkViewer_gt.addActor(planeActor_gt);
-
-                            vtkViewer_comp.removeActor(arrowActor_comp);
-                            vtkViewer_comp.removeActor(planeActor_comp);
-                            arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
-                            planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
-                            vtkViewer_comp.addActor(arrowActor_comp);
-                            vtkViewer_comp.addActor(planeActor_comp);
+                            vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
+                            vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
+                            vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
                         }
                         else
                         {
                             vectorIndex--;
-                            vtkViewer_madg.removeActor(arrowActor_madg);
-                            vtkViewer_madg.removeActor(planeActor_madg);
-                            arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
-                            planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
-                            vtkViewer_madg.addActor(arrowActor_madg);
-                            vtkViewer_madg.addActor(planeActor_madg);
-
-                            vtkViewer_gt.removeActor(arrowActor_gt);
-                            vtkViewer_gt.removeActor(planeActor_gt);
-                            arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
-                            planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
-                            vtkViewer_gt.addActor(arrowActor_gt);
-                            vtkViewer_gt.addActor(planeActor_gt);
-
-                            vtkViewer_comp.removeActor(arrowActor_comp);
-                            vtkViewer_comp.removeActor(planeActor_comp);
-                            arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
-                            planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
-                            vtkViewer_comp.addActor(arrowActor_comp);
-                            vtkViewer_comp.addActor(planeActor_comp);
+                            vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
+                            vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
+                            vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
                         }
                     }
                     ImGui::SameLine();
@@ -534,50 +492,17 @@ int main(int argc, char* argv[])
                         if(vectorIndex >= gravity_vectors_madg.size()-1) 
                         {
                             vectorIndex = 0;
-                            vtkViewer_madg.removeActor(arrowActor_madg);
-                            vtkViewer_madg.removeActor(planeActor_madg);
-                            arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
-                            planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
-                            vtkViewer_madg.addActor(arrowActor_madg);
-                            vtkViewer_madg.addActor(planeActor_madg);
+                            vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
+                            vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
+                            vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
 
-                            vtkViewer_gt.removeActor(arrowActor_gt);
-                            vtkViewer_gt.removeActor(planeActor_gt);
-                            arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
-                            planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
-                            vtkViewer_gt.addActor(arrowActor_gt);
-                            vtkViewer_gt.addActor(planeActor_gt);
-
-                            vtkViewer_comp.removeActor(arrowActor_comp);
-                            vtkViewer_comp.removeActor(planeActor_comp);
-                            arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
-                            planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
-                            vtkViewer_comp.addActor(arrowActor_comp);
-                            vtkViewer_comp.addActor(planeActor_comp);
                         }
                         else
                         {
                             vectorIndex++;
-                            vtkViewer_madg.removeActor(arrowActor_madg);
-                            vtkViewer_madg.removeActor(planeActor_madg);
-                            arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
-                            planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
-                            vtkViewer_madg.addActor(arrowActor_madg);
-                            vtkViewer_madg.addActor(planeActor_madg);
-
-                            vtkViewer_gt.removeActor(arrowActor_gt);
-                            vtkViewer_gt.removeActor(planeActor_gt);
-                            arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
-                            planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
-                            vtkViewer_gt.addActor(arrowActor_gt);
-                            vtkViewer_gt.addActor(planeActor_gt);
-
-                            vtkViewer_comp.removeActor(arrowActor_comp);
-                            vtkViewer_comp.removeActor(planeActor_comp);
-                            arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
-                            planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
-                            vtkViewer_comp.addActor(arrowActor_comp);
-                            vtkViewer_comp.addActor(planeActor_comp);
+                            vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
+                            vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
+                            vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
                         }
                     }
                 }
@@ -592,48 +517,14 @@ int main(int argc, char* argv[])
                         }
 
                         vectorIndex = 0;
-                        vtkViewer_madg.removeActor(arrowActor_madg);
-                        vtkViewer_madg.removeActor(planeActor_madg);
-                        arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
-                        planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
-                        vtkViewer_madg.addActor(arrowActor_madg);
-                        vtkViewer_madg.addActor(planeActor_madg);
-
-                        vtkViewer_gt.removeActor(arrowActor_gt);
-                        vtkViewer_gt.removeActor(planeActor_gt);
-                        arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
-                        planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
-                        vtkViewer_gt.addActor(arrowActor_gt);
-                        vtkViewer_gt.addActor(planeActor_gt);
-
-                        vtkViewer_comp.removeActor(arrowActor_comp);
-                        vtkViewer_comp.removeActor(planeActor_comp);
-                        arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
-                        planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
-                        vtkViewer_comp.addActor(arrowActor_comp);
-                        vtkViewer_comp.addActor(planeActor_comp);
+                        vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
+                        vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
+                        vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
                     }
                     vectorIndex++;
-                    vtkViewer_madg.removeActor(arrowActor_madg);
-                    vtkViewer_madg.removeActor(planeActor_madg);
-                    arrowActor_madg = getArrowActor(gravity_vectors_madg.at(vectorIndex));
-                    planeActor_madg = getPlaneActor(gravity_vectors_madg.at(vectorIndex));
-                    vtkViewer_madg.addActor(arrowActor_madg);
-                    vtkViewer_madg.addActor(planeActor_madg);
-
-                    vtkViewer_gt.removeActor(arrowActor_gt);
-                    vtkViewer_gt.removeActor(planeActor_gt);
-                    arrowActor_gt = getArrowActor(gravity_vectors_gt.at(vectorIndex));
-                    planeActor_gt = getPlaneActor(gravity_vectors_gt.at(vectorIndex));
-                    vtkViewer_gt.addActor(arrowActor_gt);
-                    vtkViewer_gt.addActor(planeActor_gt);
-
-                    vtkViewer_comp.removeActor(arrowActor_comp);
-                    vtkViewer_comp.removeActor(planeActor_comp);
-                    arrowActor_comp = getArrowActor(gravity_vectors_comp.at(vectorIndex));
-                    planeActor_comp = getPlaneActor(gravity_vectors_comp.at(vectorIndex));
-                    vtkViewer_comp.addActor(arrowActor_comp);
-                    vtkViewer_comp.addActor(planeActor_comp);
+                    vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
+                    vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
+                    vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
                 }
 
                 ImGui::Text("Show vector visualization windows:");

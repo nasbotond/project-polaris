@@ -97,6 +97,7 @@
         "future": "cpp",
         "ranges": "cpp",
         "span": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "*.txx": "cpp"
     }
 }

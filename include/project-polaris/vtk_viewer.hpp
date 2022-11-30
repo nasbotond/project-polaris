@@ -18,6 +18,13 @@
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkRenderer.h>
 #include <vtkCamera.h>
+#include <vtkMinimalStandardRandomSequence.h>
+#include <vtkTransform.h>
+#include <vtkMath.h>
+#include <vtkPointData.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkPlaneSource.h>
+#include <vtkProperty.h>
 
 // RGB Color in range [0.0, 1.0]
 #define DEFAULT_BACKGROUND 0.39, 0.39, 0.39
@@ -65,6 +72,9 @@ class VtkViewer
 		IMGUI_IMPL_API void addActor(const vtkSmartPointer<vtkProp>& actor);
 		IMGUI_IMPL_API void addActors(const vtkSmartPointer<vtkPropCollection>& actors);
 		IMGUI_IMPL_API void removeActor(const vtkSmartPointer<vtkProp>& actor);
+		IMGUI_IMPL_API void updateActors(const vtkSmartPointer<vtkActorCollection>& actors, const std::vector<double>& vector);
+		IMGUI_IMPL_API vtkSmartPointer<vtkTransform> getNewTransform(const std::vector<double>& vector);
+		IMGUI_IMPL_API vtkSmartPointer<vtkPlaneSource> getNewPlaneSource(const std::vector<double>& vector);
 		void setViewportSize(const ImVec2 newSize);
 	public:
 		static inline unsigned int NoScrollFlags(){

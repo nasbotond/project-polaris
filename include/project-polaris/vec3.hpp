@@ -27,8 +27,8 @@ class Vec3
             return Vec3(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);
         }
 
-        std::string to_string()
+        std::string to_csv_string()
         {
-            return std::to_string(x) + " " + std::to_string(y) + " " + std::to_string(z);
+            return std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z);
         }
 };
