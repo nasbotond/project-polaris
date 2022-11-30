@@ -12,6 +12,7 @@ class Quaternion
         float q_1, q_2, q_3, q_4;
 
         Quaternion(float q_1, float q_2, float q_3, float q_4) : q_1(q_1), q_2(q_2), q_3(q_3), q_4(q_4) {}
+        Quaternion() {}
         ~Quaternion() {}
 
         float roll()

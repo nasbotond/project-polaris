@@ -54,10 +54,10 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, int &start_index, int &end_index, const bool &max_index, std::vector<std::vector<double>> &gravity_vectors_madg,
- std::vector<std::vector<double>> &gravity_vectors_gt, std::vector<std::vector<double>> &gravity_vectors_comp, std::string &results_suffix)
+std::string runFilter(const int &freq, const float &comp_gain, const float &madg_beta, int &start_index, int &end_index, const bool &max_index, std::vector<std::vector<double>> &gravity_vectors_madg,
+ std::vector<std::vector<double>> &gravity_vectors_gt, std::vector<std::vector<double>> &gravity_vectors_comp)
 {
-        float deltat = 1.0f/(float)freq;
+    float deltat = 1.0f/(float)freq;
 
     // Input
     ComplementaryFilter comp = ComplementaryFilter(deltat, comp_gain);
@@ -80,34 +80,55 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
     std::vector<Vec3> m = CsvReader::getVec3Data(fPath + "imu_mag.csv");
     std::vector<Quaternion> gt = CsvReader::getQuatData(fPath + "opt_quat.csv");
 
-    std::filesystem::create_directories(fPath + results_suffix);
+    if(max_index)
+    {
+        end_index = a.size();
+    }
 
-    est_madg_mag.open (fPath + results_suffix + "/est_madg_mag.csv");
-    est_madg_no_mag.open (fPath + results_suffix + "/est_madg_no_mag.csv");
-    est_comp_mag.open (fPath + results_suffix + "/est_comp_mag.csv");
-    est_comp_no_mag.open (fPath + results_suffix + "/est_comp_no_mag.csv");
-
-    error_madg_mag.open (fPath + results_suffix + "/error_madg_mag.csv");
-    error_madg_no_mag.open (fPath + results_suffix + "/error_madg_no_mag.csv");
-    error_comp_mag.open (fPath + results_suffix + "/error_comp_mag.csv");
-    error_comp_no_mag.open (fPath + results_suffix + "/error_comp_no_mag.csv");
-
+    Quaternion initial_state;
     if(start_index < 1)
     {
-        start_index = 1;
-        
+        start_index = 0;
+        initial_state = Quaternion::getOrientationFromAccMag(a.at(0), m.at(0));        
     }
-    Quaternion initial_state = Quaternion::getOrientationFromAccMag(a.at(start_index-1), m.at(start_index-1));
+    else
+    {
+        initial_state = Quaternion::getOrientationFromAccMag(a.at(start_index-1), m.at(start_index-1));
+    }
+
+    std::string results_suffix = "_" + std::to_string(freq) + "_" + std::to_string(comp_gain) + "_" + std::to_string(madg_beta) + "_" + std::to_string(start_index) + "_" + std::to_string(end_index);
+
+    std::string str = fPath.substr(0, fPath.length()-2);
+    char ch = '/';            
+    size_t index = str.rfind(ch);
+
+    if (index != std::string::npos) 
+    {
+        results_suffix = "out_" + fPath.substr(index+1, fPath.length()-2) + results_suffix;
+    }
+    else
+    {
+        results_suffix = "out" + results_suffix;
+    }
+
+    std::filesystem::create_directories(fPath + results_suffix);
+
+    est_madg_mag.open(fPath + results_suffix + "/est_madg_mag.csv");
+    est_madg_no_mag.open(fPath + results_suffix + "/est_madg_no_mag.csv");
+    est_comp_mag.open(fPath + results_suffix + "/est_comp_mag.csv");
+    est_comp_no_mag.open(fPath + results_suffix + "/est_comp_no_mag.csv");
+
+    error_madg_mag.open(fPath + results_suffix + "/error_madg_mag.csv");
+    error_madg_no_mag.open(fPath + results_suffix + "/error_madg_no_mag.csv");
+    error_comp_mag.open(fPath + results_suffix + "/error_comp_mag.csv");
+    error_comp_no_mag.open(fPath + results_suffix + "/error_comp_no_mag.csv");  
+
     comp_mag.setInitialState(initial_state);
     madg_mag.setInitialState(initial_state);
     comp.setInitialState(initial_state);
     madg.setInitialState(initial_state);
 
-    if(max_index)
-    {
-        end_index = a.size()-1;
-    }
-    for (int i = start_index; i < end_index+1; ++i)
+    for (int i = start_index; i < end_index; ++i)
     {
         comp_mag.updateFilter(w.at(i), a.at(i), m.at(i));
         comp.updateFilter(w.at(i), a.at(i));
@@ -183,6 +204,8 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
     error_madg_no_mag.close();
     error_comp_mag.close();
     error_comp_no_mag.close();
+
+    return results_suffix;
 }
 
 int main(int argc, char* argv[])
@@ -406,27 +429,12 @@ int main(int argc, char* argv[])
                     gravity_vectors_gt.clear();
                     gravity_vectors_comp.clear();
 
-                    std::string results_suffix = "_" + std::to_string(freq) + "_" + std::to_string(comp_gain) + "_" + std::to_string(madg_beta) + "_" + std::to_string(start_index) + "_" + std::to_string(end_index);
-
-                    std::string str = fPath.substr(0, fPath.length()-2);
-                    char ch = '/';            
-                    size_t index = str.rfind(ch);
-
-                    if (index != std::string::npos) 
-                    {
-                        results_suffix = "out_" + fPath.substr(index+1, fPath.length()-2) + results_suffix;
-                    }
-                    else
-                    {
-                        results_suffix = "out" + results_suffix;
-                    }
-
                     if(min_index)
                     {
                         start_index = 0;
                     }
                 
-                    runFilter(freq, comp_gain, madg_beta, start_index, end_index, max_index, gravity_vectors_madg, gravity_vectors_gt, gravity_vectors_comp, results_suffix);
+                    std::string results_suffix = runFilter(freq, comp_gain, madg_beta, start_index, end_index, max_index, gravity_vectors_madg, gravity_vectors_gt, gravity_vectors_comp);
 
                     vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(0));
                     vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(0));
