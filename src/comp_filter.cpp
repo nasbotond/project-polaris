@@ -76,7 +76,7 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
         q.q_2 = q_omega.q_2 * one_minus_gain + gain*(q_am.q_2);
         q.q_3 = q_omega.q_3 * one_minus_gain + gain*(q_am.q_3);
         q.q_4 = q_omega.q_4 * one_minus_gain + gain*(q_am.q_4);
-    }    
+    }
 
     q.norm();
 }
@@ -135,9 +135,4 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a)
     }
 
     q.norm();
-}
-
-float ComplementaryFilter::sgn(float v)
-{
-  return (v < 0) ? -1.0 : ((v > 0) ? 1.0 : 0.0);
 }

@@ -17,17 +17,25 @@ class Quaternion
 
         float roll()
         {
-            return atan2(2*q_3*q_4 - 2*q_1*q_2, 2*q_1*q_1 + 2*q_4*q_4 - 1);
+            // return atan2(2*q_3*q_4 - 2*q_1*q_2, 2*q_1*q_1 + 2*q_4*q_4 - 1);
+            return atan2(2*q_3*q_4 + 2*q_1*q_2, 1 - 2*q_2*q_2 + 2*q_3*q_3);
         }
 
         float pitch()
         {
-            return -asin(2*q_2*q_4 + 2*q_1*q_3);
+            // return -asin(2*q_2*q_4 + 2*q_1*q_3);
+            float sin_p = 2*q_1*q_3 - 2*q_2*q_4;
+            if(std::abs(sin_p) >= 1.0)
+            {
+                return std::copysign(M_PI/2, sin_p);
+            }
+            return asin(2*q_1*q_3 - 2*q_2*q_4);
         }
 
         float yaw()
         {
-            return atan2(2*q_2*q_3 - 2*q_1*q_4, 2*q_1*q_1 + 2*q_2*q_2 - 1);
+            // return atan2(2*q_2*q_3 - 2*q_1*q_4, 2*q_1*q_1 + 2*q_2*q_2 - 1);
+            return atan2(2*q_2*q_3 + 2*q_1*q_4, 1 - 2*q_3*q_3 + 2*q_4*q_4);
         }
 
         void norm()
@@ -37,6 +45,16 @@ class Quaternion
             q_2 /= norm;
             q_3 /= norm;
             q_4 /= norm;
+        }
+
+        bool isNaN()
+        {
+            return (isnan(q_1) || isnan(q_2) || isnan(q_3) || isnan(q_4));
+        }
+
+        static float sgn(float v)
+        {
+        return (v < 0) ? -1.0 : ((v > 0) ? 1.0 : 0.0);
         }
 
         static Quaternion getOrientationFromAccMag(Vec3 a, Vec3 m)
@@ -99,15 +117,10 @@ class Quaternion
             Quaternion result = Quaternion(0, 0, 0, 0);
 
             result.q_1 = sqrt(w_sq);
-            result.q_2 = (z.y - y.z)/abs(z.y - y.z) * sqrt(x_sq);
-            result.q_3 = (x.z - z.x)/abs(x.z - z.x) * sqrt(y_sq);
-            result.q_4 = (y.x - x.y)/abs(y.x - x.y) * sqrt(z_sq);
+            result.q_2 = sgn(z.y - y.z) * sqrt(x_sq);
+            result.q_3 = sgn(x.z - z.x) * sqrt(y_sq);
+            result.q_4 = sgn(y.x - x.y) * sqrt(z_sq);
 
             return result;
-        }
-
-        bool isNaN()
-        {
-            return (isnan(q_1) || isnan(q_2) || isnan(q_3) || isnan(q_4));
         }
 };

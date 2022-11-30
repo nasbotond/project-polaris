@@ -448,15 +448,15 @@ int main(int argc, char* argv[])
             ImGui::InputFloat(_labelPrefix("Sample frequency:").c_str(), &freq, 0.01f, 1.0f, "%.3f");
 
             static float comp_gain = 0.2f;
-            ImGui::InputFloat(_labelPrefix("Comp. filter gain:").c_str(), &comp_gain, 0.01f, 1.0f, "%.3f");
+            ImGui::InputFloat(_labelPrefix("Comp. filter gain:").c_str(), &comp_gain, 0.01f, 1.0f, "%.5f");
 
             static float madg_beta = 0.2f;
-            ImGui::InputFloat(_labelPrefix("Madg. filter beta").c_str(), &madg_beta, 0.01f, 1.0f, "%.3f");
+            ImGui::InputFloat(_labelPrefix("Madg. filter beta").c_str(), &madg_beta, 0.01f, 1.0f, "%.5f");
 
-            ImGui::Checkbox(_labelPrefix("Save to file").c_str(), &save_to_file);
+            ImGui::Checkbox(_labelPrefix("Save results to files: ").c_str(), &save_to_file);
 
             if(ImGui::Button("Calculate"))
-            {
+            {     
                 if(fPath.length() != 0)
                 {
                     gravity_vectors_madg.clear();
@@ -469,7 +469,7 @@ int main(int argc, char* argv[])
                     {
                         start_index = 0;
                     }
-                
+                                     
                     std::string results_suffix = runFilter(freq, comp_gain, madg_beta, start_index, end_index, max_index, gravity_vectors_madg_mag, gravity_vectors_madg, gravity_vectors_gt, gravity_vectors_comp_mag, gravity_vectors_comp);
 
                     vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(0));
@@ -482,7 +482,6 @@ int main(int argc, char* argv[])
 
                     if(!save_to_file)
                     {
-                        std::cout << fPath + results_suffix << std::endl;
                         std::filesystem::remove_all(fPath + results_suffix);
                     }
                     
@@ -494,6 +493,8 @@ int main(int argc, char* argv[])
                     ImGui::OpenPopup("No data, no problem...?");
                 }
             }
+            // ImGui::SameLine();
+            // ImGui::Text("Loading %c", "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3]);
             ImGui::Text("");
 
             // Always center this window when appearing
@@ -677,7 +678,7 @@ int main(int argc, char* argv[])
                     }
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
-                    ImGui::Text("Heading error");
+                    ImGui::Text("Head. error");
                     for (int column = 1; column < 5; column++)
                     {
                         ImGui::TableSetColumnIndex(column);
