@@ -96,15 +96,15 @@ std::string runFilter(const int &freq, const float &comp_gain, const float &madg
         initial_state = Quaternion::getOrientationFromAccMag(a.at(start_index-1), m.at(start_index-1));
     }
 
-    std::string results_suffix = "_" + std::to_string(freq) + "_" + std::to_string(comp_gain) + "_" + std::to_string(madg_beta) + "_" + std::to_string(start_index) + "_" + std::to_string(end_index);
+    std::string results_suffix = "_" +std::to_string(freq) + "_" + std::to_string(comp_gain) + "_" + std::to_string(madg_beta) + "_" + std::to_string(start_index) + "_" + std::to_string(end_index);
 
     std::string str = fPath.substr(0, fPath.length()-2);
-    char ch = '/';            
+    char ch = '/';
     size_t index = str.rfind(ch);
 
-    if (index != std::string::npos) 
+    if (index != std::string::npos)
     {
-        results_suffix = "out_" + fPath.substr(index+1, fPath.length()-2) + results_suffix;
+        results_suffix = "out_" + fPath.substr(index+1, fPath.length()-2-index) + results_suffix;
     }
     else
     {
@@ -359,7 +359,6 @@ int main(int argc, char* argv[])
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-
     // Initial UI state variables set
     static bool loop = false;
     static bool black_background = false;
@@ -377,6 +376,7 @@ int main(int argc, char* argv[])
     static int vector_index = 0;
     static bool min_index = true;
     static bool max_index = true;
+    static bool save_to_file = false;
 
     // static bool show_style_editor = false;
     // static bool show_demo_window = false;
@@ -407,7 +407,7 @@ int main(int argc, char* argv[])
 
         // if (show_demo_window) ImGui::ShowDemoWindow();
 		// if (show_style_editor) ImGui::ShowStyleEditor();
-        ImGui::ShowDemoWindow();
+
         {            
             ImGui::Begin("Menu");
 
@@ -453,6 +453,8 @@ int main(int argc, char* argv[])
             static float madg_beta = 0.2f;
             ImGui::InputFloat(_labelPrefix("Madg. filter beta").c_str(), &madg_beta, 0.01f, 1.0f, "%.3f");
 
+            ImGui::Checkbox(_labelPrefix("Save to file").c_str(), &save_to_file);
+
             if(ImGui::Button("Calculate"))
             {
                 if(fPath.length() != 0)
@@ -477,6 +479,12 @@ int main(int argc, char* argv[])
                     vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(0));
 
                     rmse = CsvReader::getRMSE(fPath, results_suffix);
+
+                    if(!save_to_file)
+                    {
+                        std::cout << fPath + results_suffix << std::endl;
+                        std::filesystem::remove_all(fPath + results_suffix);
+                    }
                     
                     is_calculated = true;
                     vector_index = 0;
