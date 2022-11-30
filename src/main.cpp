@@ -49,8 +49,6 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
     MadgwickFilter madg = MadgwickFilter(deltat, madg_beta);
     MadgwickFilter madg_mag = MadgwickFilter(deltat, madg_beta);
 
-    // CsvReader read = CsvReader("../test_data/");
-
     std::ofstream est_madg_mag;
     std::ofstream est_madg_no_mag;
     std::ofstream est_comp_mag;
@@ -60,7 +58,6 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
     std::ofstream error_madg_no_mag;
     std::ofstream error_comp_mag;
     std::ofstream error_comp_no_mag;
-    // std::ofstream euler_diff;
 
     std::vector<Vec3> a = CsvReader::getVec3Data(fPath + "imu_acc.csv");
     std::vector<Vec3> w = CsvReader::getVec3Data(fPath + "imu_gyr.csv");
@@ -78,8 +75,6 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
     error_madg_no_mag.open (fPath + results_suffix + "/error_madg_no_mag.csv");
     error_comp_mag.open (fPath + results_suffix + "/error_comp_mag.csv");
     error_comp_no_mag.open (fPath + results_suffix + "/error_comp_no_mag.csv");
-
-    // euler_diff.open ("../results/euler_diff.csv");
 
     if(start_index < 1)
     {
@@ -168,29 +163,46 @@ void runFilter(const int &freq, const float &comp_gain, const float &madg_beta, 
     error_madg_no_mag.close();
     error_comp_mag.close();
     error_comp_no_mag.close();
-
-    // euler_diff.close();
 }
 
 int main(int argc, char* argv[])
 {
+    // Set background color
+    vtkNew<vtkNamedColors> colors;
+    std::array<unsigned char, 4> bkg{{26, 51, 77, 255}};
+    colors->SetColor("BkgColor", bkg.data());
+
+    // Init vtkViewers
+    VtkViewer vtk_viewer_madg;
+    VtkViewer vtk_viewer_gt;
+    VtkViewer vtk_viewer_comp;
+
     std::vector<std::vector<double>> gravity_vectors_madg;
     std::vector<std::vector<double>> gravity_vectors_gt;
     std::vector<std::vector<double>> gravity_vectors_comp;
 
-    // Setup pipeline
-    vtkSmartPointer<vtkActor> arrowActor_madg;
-    vtkSmartPointer<vtkActor> planeActor_madg;
+    // Initialize actors
+    vtkSmartPointer<vtkActor> arrowActor_madg = getArrowActor({0, 0, 0});
+    vtkSmartPointer<vtkActor> planeActor_madg = getPlaneActor({0, 0, 0});
 
-    vtkSmartPointer<vtkActor> arrowActor_gt;
-    vtkSmartPointer<vtkActor> planeActor_gt;
+    vtkSmartPointer<vtkActor> arrowActor_gt = getArrowActor({0, 0, 0});
+    vtkSmartPointer<vtkActor> planeActor_gt = getPlaneActor({0, 0, 0});
 
-    vtkSmartPointer<vtkActor> arrowActor_comp;
-    vtkSmartPointer<vtkActor> planeActor_comp;
+    vtkSmartPointer<vtkActor> arrowActor_comp = getArrowActor({0, 0, 0});
+    vtkSmartPointer<vtkActor> planeActor_comp = getPlaneActor({0, 0, 0});
 
     vtkSmartPointer<vtkActorCollection> actors_madg = vtkSmartPointer<vtkActorCollection>::New();
     vtkSmartPointer<vtkActorCollection> actors_gt = vtkSmartPointer<vtkActorCollection>::New();
     vtkSmartPointer<vtkActorCollection> actors_comp = vtkSmartPointer<vtkActorCollection>::New();
+
+    actors_madg->AddItem(arrowActor_madg);
+    actors_madg->AddItem(planeActor_madg);
+
+    actors_gt->AddItem(arrowActor_gt);
+    actors_gt->AddItem(planeActor_gt);
+
+    actors_comp->AddItem(arrowActor_comp);
+    actors_comp->AddItem(planeActor_comp);
 
     // AXES
     auto transformA = vtkSmartPointer<vtkTransform>::New();
@@ -200,6 +212,21 @@ int main(int argc, char* argv[])
 
     // The axes are positioned with a user transform
     axes->SetUserTransform(transformA);
+
+    // Add actors to vtkViewer instances
+    vtk_viewer_madg.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
+    vtk_viewer_madg.addActors(actors_madg);
+    vtk_viewer_madg.addActor(axes);
+
+    vtk_viewer_gt.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
+    vtk_viewer_gt.addActors(actors_gt);
+    vtk_viewer_gt.addActor(axes);
+
+    vtk_viewer_comp.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
+    vtk_viewer_comp.addActors(actors_comp);
+    vtk_viewer_comp.addActor(axes);
+
+    // ---- OpenGL stuff ----
 
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
@@ -249,35 +276,35 @@ int main(int argc, char* argv[])
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
+    ImGuiStyle* style = &ImGui::GetStyle();
+    style->WindowRounding = 4;
+    style->FrameRounding = 4;
+    style->GrabRounding = 4;
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    vtkNew<vtkNamedColors> colors;
-    std::array<unsigned char, 4> bkg{{26, 51, 77, 255}};
-    colors->SetColor("BkgColor", bkg.data());
 
-    VtkViewer vtkViewer_madg;
+    // Initial UI state variables set
+    static bool loop = false;
+    static bool black_background = false;
 
-    VtkViewer vtkViewer_gt;
+    static bool vtk_madg_open = false;
+    static bool vtk_gt_open = false;
+    static bool vtk_comp_open = false;
 
-    VtkViewer vtkViewer_comp;
+    static bool is_playing = false;
+    static bool is_manual_playback = true;
 
-    // Our state
-    bool vtk_madg_open = false;
-    bool vtk_gt_open = false;
-    bool vtk_comp_open = false;
+    static bool is_calculated = false;
+    static int vector_index = 0;
 
-    bool isPlaying = false;
-    bool isManuelPlayback = true;
-
-    bool show_demo_window = true;
-    bool isCalculated = false;
-    static int vectorIndex = 0;
+    // static bool show_style_editor = false;
+    // static bool show_demo_window = false;
     std::vector<Vec3> rmse;
 
-    // Main loop
+    // Main window loop
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -288,14 +315,25 @@ int main(int argc, char* argv[])
         ImGui::NewFrame();
 
         ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-        // ImGui::ShowDemoWindow(&show_demo_window);
 
-        {        
-            static bool loop = false;
-            static bool black = false;
+        // if(ImGui::BeginMainMenuBar())
+        // {
+        //     if(ImGui::BeginMenu("Windows")) 
+        //     {
+        //         ImGui::MenuItem("Style editor", 0, &show_style_editor);
+        //         ImGui::MenuItem("Demo Window", 0, &show_demo_window);
+        //         ImGui::EndMenu();
+        //     }
+        //     ImGui::EndMainMenuBar();
+        // }
+
+        // if (show_demo_window) ImGui::ShowDemoWindow();
+		// if (show_style_editor) ImGui::ShowStyleEditor();
+
+        {            
             ImGui::Begin("Menu");
 
-            if (ImGui::Button("Select Folder"))
+            if(ImGui::Button("Select Folder"))
             {
                 selectedfolderPath = NULL;
                 fPath = "";
@@ -304,7 +342,7 @@ int main(int argc, char* argv[])
                 selectedfolderPath = tinyfd_selectFolderDialog("Select Folder with data files in it", "");
                 if (!selectedfolderPath)
                 {
-
+                    // Return to UI
                 }
                 else
                 {
@@ -333,12 +371,6 @@ int main(int argc, char* argv[])
             {
                 if(fPath.length() != 0)
                 {
-                    vtkViewer_madg.removeActor(arrowActor_madg);
-                    vtkViewer_madg.removeActor(planeActor_madg);
-                    vtkViewer_gt.removeActor(arrowActor_gt);
-                    vtkViewer_gt.removeActor(planeActor_gt);
-                    vtkViewer_comp.removeActor(arrowActor_comp);
-                    vtkViewer_comp.removeActor(planeActor_comp);
                     gravity_vectors_madg.clear();
                     gravity_vectors_gt.clear();
                     gravity_vectors_comp.clear();
@@ -359,40 +391,15 @@ int main(int argc, char* argv[])
                     }
                 
                     runFilter(freq, comp_gain, madg_beta, start_index, end_index, gravity_vectors_madg, gravity_vectors_gt, gravity_vectors_comp, results_suffix);
-                    arrowActor_madg = getArrowActor(gravity_vectors_madg.at(0));
-                    planeActor_madg = getPlaneActor(gravity_vectors_madg.at(0));
 
-                    arrowActor_gt = getArrowActor(gravity_vectors_gt.at(0));
-                    planeActor_gt = getPlaneActor(gravity_vectors_gt.at(0));
-
-                    arrowActor_comp = getArrowActor(gravity_vectors_comp.at(0));
-                    planeActor_comp = getPlaneActor(gravity_vectors_comp.at(0));
-
-                    actors_madg->AddItem(arrowActor_madg);
-                    actors_madg->AddItem(planeActor_madg);
-
-                    actors_gt->AddItem(arrowActor_gt);
-                    actors_gt->AddItem(planeActor_gt);
-
-                    actors_comp->AddItem(arrowActor_comp);
-                    actors_comp->AddItem(planeActor_comp);
-
-                    vtkViewer_madg.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                    vtkViewer_madg.addActors(actors_madg);
-                    vtkViewer_madg.addActor(axes);
-
-                    vtkViewer_gt.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                    vtkViewer_gt.addActors(actors_gt);
-                    vtkViewer_gt.addActor(axes);
-
-                    vtkViewer_comp.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                    vtkViewer_comp.addActors(actors_comp);
-                    vtkViewer_comp.addActor(axes);
+                    vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(0));
+                    vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(0));
+                    vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(0));
 
                     rmse = CsvReader::getRMSE(fPath, results_suffix);
                     
-                    isCalculated = true;
-                    vectorIndex = 0;
+                    is_calculated = true;
+                    vector_index = 0;
                 }
                 else
                 {
@@ -403,7 +410,7 @@ int main(int argc, char* argv[])
             // Always center this window when appearing
             ImVec2 center = ImGui::GetMainViewport()->GetCenter();
             ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-            if (ImGui::BeginPopupModal("No data, no problem...?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+            if(ImGui::BeginPopupModal("No data, no problem...?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
             {
                 ImGui::Text("Please select a folder containing data files!\n\n");
                 ImGui::Separator();
@@ -413,27 +420,22 @@ int main(int argc, char* argv[])
                 ImGui::EndPopup();
             }
 
-            if(isCalculated)
+            if(is_calculated)
             {
-                // Other widgets can be placed in the same window as the VTKViewer
-                // However, since the VTKViewer is rendered to size ImGui::GetContentRegionAvail(),
-                // it is best to put all widgets first (i.e., render the VTKViewer last).
-                // If you want the VTKViewer to be at the top of a window, you can manually calculate
-                // and define its size, accounting for the space taken up by other widgets
+                auto renderer = vtk_viewer_madg.getRenderer();
+                auto renderer_gt = vtk_viewer_gt.getRenderer();
+                auto renderer_comp = vtk_viewer_comp.getRenderer();
 
-                auto renderer = vtkViewer_madg.getRenderer();
-                auto renderer_gt = vtkViewer_gt.getRenderer();
-                auto renderer_comp = vtkViewer_comp.getRenderer();
-
-                ImGui::Checkbox("Black background", &black);
-                if(black)
+                ImGui::Checkbox("Black background", &black_background);
+                if(black_background)
                 {
+                    // Set background to black
                     renderer->SetBackground(0, 0, 0);
                     renderer_gt->SetBackground(0, 0, 0);
                     renderer_comp->SetBackground(0, 0, 0);
                 }
 
-                if(!black)
+                if(!black_background)
                 {
                     renderer->SetBackground(colors->GetColor3d("BkgColor").GetData());
                     renderer_gt->SetBackground(colors->GetColor3d("BkgColor").GetData());
@@ -446,85 +448,85 @@ int main(int argc, char* argv[])
                 renderer_gt->SetBackgroundAlpha(vtk2BkgAlpha);
                 renderer_comp->SetBackgroundAlpha(vtk2BkgAlpha);
 
-                if(isManuelPlayback)
+                if(is_manual_playback)
                 {
-                    if(ImGui::SliderInt("Vector Index", &vectorIndex, 0, gravity_vectors_madg.size()-1))
+                    if(ImGui::SliderInt("Vector Index", &vector_index, 0, gravity_vectors_madg.size()-1))
                     {
-                        vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
-                        vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
-                        vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
+                        vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
+                        vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
+                        vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                     }
 
                     ImGui::Checkbox("Loop", &loop);
-                    if(isPlaying)
+                    if(is_playing)
                     {
                         if(ImGui::Button("Stop")) 
                         {
-                            isPlaying = false;
+                            is_playing = false;
                         }
                     }
                     else if(ImGui::Button("Play"))
                     {
-                        isPlaying = true;
+                        is_playing = true;
                     }
 
                     if(ImGui::Button("Previous Index"))
                     {
-                        if(vectorIndex < 1)
+                        if(vector_index < 1)
                         {
-                            vectorIndex = gravity_vectors_madg.size()-1;
-                            vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
-                            vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
-                            vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
+                            vector_index = gravity_vectors_madg.size()-1;
+                            vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
+                            vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
+                            vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                         }
                         else
                         {
-                            vectorIndex--;
-                            vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
-                            vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
-                            vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
+                            vector_index--;
+                            vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
+                            vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
+                            vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                         }
                     }
                     ImGui::SameLine();
 
                     if(ImGui::Button("Next Index"))
                     {
-                        if(vectorIndex >= gravity_vectors_madg.size()-1) 
+                        if(vector_index >= gravity_vectors_madg.size()-1) 
                         {
-                            vectorIndex = 0;
-                            vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
-                            vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
-                            vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
+                            vector_index = 0;
+                            vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
+                            vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
+                            vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
 
                         }
                         else
                         {
-                            vectorIndex++;
-                            vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
-                            vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
-                            vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
+                            vector_index++;
+                            vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
+                            vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
+                            vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                         }
                     }
                 }
 
-                if(isPlaying)
+                if(is_playing)
                 {
-                    if(vectorIndex >= gravity_vectors_madg.size()-1) 
+                    if(vector_index >= gravity_vectors_madg.size()-1) 
                     {
                         if(!loop)
                         {
-                            isPlaying = false;
+                            is_playing = false;
                         }
 
-                        vectorIndex = 0;
-                        vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
-                        vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
-                        vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
+                        vector_index = 0;
+                        vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
+                        vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
+                        vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                     }
-                    vectorIndex++;
-                    vtkViewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vectorIndex));
-                    vtkViewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vectorIndex));
-                    vtkViewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vectorIndex));
+                    vector_index++;
+                    vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
+                    vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
+                    vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                 }
 
                 ImGui::Text("Show vector visualization windows:");
@@ -533,7 +535,7 @@ int main(int argc, char* argv[])
                 ImGui::Checkbox("Complementary filter estimation", &vtk_comp_open);
 
                 ImGui::Text("RMSE Values (degrees): ");
-                if (ImGui::BeginTable("table1", 5))
+                if(ImGui::BeginTable("table1", 5))
                 {
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(1);
@@ -581,30 +583,30 @@ int main(int argc, char* argv[])
             ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
             ImGui::Begin("Madgwick Filter estimation", &vtk_madg_open, VtkViewer::NoScrollFlags());
             ImGui::Text("Euler angles (degrees): ");
-            if (ImGui::BeginTable("table2", 3))
+            if(ImGui::BeginTable("table2", 3))
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", gravity_vectors_madg.at(vectorIndex).at(0)*180/M_PI);
+                ImGui::Text("Roll: %f", gravity_vectors_madg.at(vector_index).at(0)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", gravity_vectors_madg.at(vectorIndex).at(1)*180/M_PI);
+                ImGui::Text("Pitch: %f", gravity_vectors_madg.at(vector_index).at(1)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", gravity_vectors_madg.at(vectorIndex).at(2)*180/M_PI);
+                ImGui::Text("Yaw: %f", gravity_vectors_madg.at(vector_index).at(2)*180/M_PI);
                 ImGui::EndTable();
             }
             ImGui::Text("Euler angle errors (degrees): ");
-            if (ImGui::BeginTable("table5", 3))
+            if(ImGui::BeginTable("table5", 3))
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", (gravity_vectors_madg.at(vectorIndex).at(0)-gravity_vectors_gt.at(vectorIndex).at(0))*180/M_PI);
+                ImGui::Text("Roll: %f", (gravity_vectors_madg.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", (gravity_vectors_madg.at(vectorIndex).at(1)-gravity_vectors_gt.at(vectorIndex).at(1))*180/M_PI);
+                ImGui::Text("Pitch: %f", (gravity_vectors_madg.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", (gravity_vectors_madg.at(vectorIndex).at(2)-gravity_vectors_gt.at(vectorIndex).at(2))*180/M_PI);
+                ImGui::Text("Yaw: %f", (gravity_vectors_madg.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
                 ImGui::EndTable();
             }
-            vtkViewer_madg.render();
+            vtk_viewer_madg.render();
             ImGui::End();
         }
 
@@ -613,18 +615,18 @@ int main(int argc, char* argv[])
             ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
             ImGui::Begin("Ground truth", &vtk_gt_open, VtkViewer::NoScrollFlags());
             ImGui::Text("Euler angles (degrees): ");
-            if (ImGui::BeginTable("table3", 3))
+            if(ImGui::BeginTable("table3", 3))
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", gravity_vectors_gt.at(vectorIndex).at(0)*180/M_PI);
+                ImGui::Text("Roll: %f", gravity_vectors_gt.at(vector_index).at(0)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", gravity_vectors_gt.at(vectorIndex).at(1)*180/M_PI);
+                ImGui::Text("Pitch: %f", gravity_vectors_gt.at(vector_index).at(1)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", gravity_vectors_gt.at(vectorIndex).at(2)*180/M_PI);
+                ImGui::Text("Yaw: %f", gravity_vectors_gt.at(vector_index).at(2)*180/M_PI);
                 ImGui::EndTable();
             }
-            vtkViewer_gt.render();
+            vtk_viewer_gt.render();
             ImGui::End();
         }
 
@@ -633,30 +635,30 @@ int main(int argc, char* argv[])
             ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
             ImGui::Begin("Complementary Filter estimation", &vtk_comp_open, VtkViewer::NoScrollFlags());
             ImGui::Text("Euler angles (degrees): ");
-            if (ImGui::BeginTable("table4", 3))
+            if(ImGui::BeginTable("table4", 3))
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", gravity_vectors_comp.at(vectorIndex).at(0)*180/M_PI);
+                ImGui::Text("Roll: %f", gravity_vectors_comp.at(vector_index).at(0)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", gravity_vectors_comp.at(vectorIndex).at(1)*180/M_PI);
+                ImGui::Text("Pitch: %f", gravity_vectors_comp.at(vector_index).at(1)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", gravity_vectors_comp.at(vectorIndex).at(2)*180/M_PI);
+                ImGui::Text("Yaw: %f", gravity_vectors_comp.at(vector_index).at(2)*180/M_PI);
                 ImGui::EndTable();
             }
             ImGui::Text("Euler angle errors (degrees): ");
-            if (ImGui::BeginTable("table6", 3))
+            if(ImGui::BeginTable("table6", 3))
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", (gravity_vectors_comp.at(vectorIndex).at(0)-gravity_vectors_gt.at(vectorIndex).at(0))*180/M_PI);
+                ImGui::Text("Roll: %f", (gravity_vectors_comp.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", (gravity_vectors_comp.at(vectorIndex).at(1)-gravity_vectors_gt.at(vectorIndex).at(1))*180/M_PI);
+                ImGui::Text("Pitch: %f", (gravity_vectors_comp.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", (gravity_vectors_comp.at(vectorIndex).at(2)-gravity_vectors_gt.at(vectorIndex).at(2))*180/M_PI);
+                ImGui::Text("Yaw: %f", (gravity_vectors_comp.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
                 ImGui::EndTable();
             }
-            vtkViewer_comp.render();
+            vtk_viewer_comp.render();
             ImGui::End();
         }
 
@@ -669,7 +671,7 @@ int main(int argc, char* argv[])
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // Update and Render additional Platform Windows
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        if(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             GLFWwindow* backup_current_context = glfwGetCurrentContext();
             ImGui::UpdatePlatformWindows();

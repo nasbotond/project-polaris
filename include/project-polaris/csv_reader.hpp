@@ -50,12 +50,12 @@ class CsvReader
          *
          * The format of the file is consistent with a ',' used as a delimiter. This function essentailly tokenizes the data line by line.
          */
-        static std::vector<Vec3> getVec3Data(const std::string &sPath)
+        static std::vector<Vec3> getVec3Data(const std::string &path)
         {
             std::vector<Vec3> result;
 
-            std::fstream file(sPath, std::ios::in);
-            // std::fstream afile(sPath, std::ios::in);
+            std::fstream file(path, std::ios::in);
+            // std::fstream afile(path, std::ios::in);
             std::string line;
             if (file.is_open())
             {
@@ -77,10 +77,10 @@ class CsvReader
          *
          * The format of the file is consistent with a ',' used as a delimiter. This function essentailly tokenizes the data line by line.
          */
-        static std::vector<Quaternion> getQuatData(const std::string &sPath)
+        static std::vector<Quaternion> getQuatData(const std::string &path)
         {
             std::vector<Quaternion> gt;
-            std::fstream file(sPath, std::ios::in);
+            std::fstream file(path, std::ios::in);
             std::string line;
             if (file.is_open())
             {
@@ -97,7 +97,7 @@ class CsvReader
             return gt;
         }        
 
-        static std::vector<Vec3> getRMSE(const std::string &sPath, std::string &results_suffix)
+        static std::vector<Vec3> getRMSE(const std::string &path, std::string &results_suffix)
         {
             std::vector<Vec3> result = std::vector<Vec3>(4);
             int rows = 0;
@@ -116,7 +116,7 @@ class CsvReader
             float sum_head_comp_mag = 0.0;
             float sum_head_comp_no_mag = 0.0;
 
-            std::fstream afile(sPath + results_suffix + "/error_madg_mag.csv", std::ios::in);
+            std::fstream afile(path + results_suffix + "/error_madg_mag.csv", std::ios::in);
             std::string aline;
             if (afile.is_open())
             {
@@ -137,7 +137,7 @@ class CsvReader
                 throw std::runtime_error("Error: failed to open file");
             }
 
-            std::fstream wfile(sPath + results_suffix + "/error_madg_no_mag.csv", std::ios::in);
+            std::fstream wfile(path + results_suffix + "/error_madg_no_mag.csv", std::ios::in);
             std::string gline;
             if (wfile.is_open())
             {
@@ -157,7 +157,7 @@ class CsvReader
                 throw std::runtime_error("Error: failed to open file");
             }
 
-            std::fstream mfile(sPath + results_suffix + "/error_comp_mag.csv", std::ios::in);
+            std::fstream mfile(path + results_suffix + "/error_comp_mag.csv", std::ios::in);
             std::string mline;
             if (mfile.is_open())
             {
@@ -177,7 +177,7 @@ class CsvReader
                 throw std::runtime_error("Error: failed to open file");
             }
 
-            std::fstream file(sPath + results_suffix + "/error_comp_no_mag.csv", std::ios::in);
+            std::fstream file(path + results_suffix + "/error_comp_no_mag.csv", std::ios::in);
             std::string line;
             if (file.is_open())
             {
@@ -203,7 +203,7 @@ class CsvReader
             result.at(3) = Vec3(sqrt(sum_total_comp_no_mag/rows), sqrt(sum_inc_comp_no_mag/rows), sqrt(sum_head_comp_no_mag/rows));
 
             std::ofstream rmse_out;
-            rmse_out.open (sPath + results_suffix + "/rmse_out.csv");
+            rmse_out.open (path + results_suffix + "/rmse_out.csv");
             for (int i = 0; i < result.size(); ++i) 
             {  
                 rmse_out << result.at(i).to_csv_string() << "\n";

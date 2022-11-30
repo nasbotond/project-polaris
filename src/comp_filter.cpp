@@ -10,7 +10,7 @@ void ComplementaryFilter::setInitialState(Quaternion &initial)
 
 void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 &m)
 {
-    float oneMinusGain = 1.0 - gain;
+    float one_minus_gain = 1.0 - gain;
 
     Quaternion q_omega = Quaternion(0, 0, 0, 0);
     Quaternion q_am = Quaternion(0, 0, 0, 0);
@@ -67,10 +67,10 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
 
     q_omega.norm();
 
-    q.q_1 = q_omega.q_1 * oneMinusGain - gain*(q_am.q_1);
-    q.q_2 = q_omega.q_2 * oneMinusGain - gain*(q_am.q_2);
-    q.q_3 = q_omega.q_3 * oneMinusGain - gain*(q_am.q_3);
-    q.q_4 = q_omega.q_4 * oneMinusGain - gain*(q_am.q_4);
+    q.q_1 = q_omega.q_1 * one_minus_gain - gain*(q_am.q_1);
+    q.q_2 = q_omega.q_2 * one_minus_gain - gain*(q_am.q_2);
+    q.q_3 = q_omega.q_3 * one_minus_gain - gain*(q_am.q_3);
+    q.q_4 = q_omega.q_4 * one_minus_gain - gain*(q_am.q_4);
 
     q.norm();
 }
@@ -78,7 +78,7 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
 void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a)
 {
     float norm;
-    float oneMinusGain = 1 - gain;
+    float one_minus_gain = 1 - gain;
 
     Quaternion q_omega = Quaternion(0, 0, 0, 0);
     Quaternion q_am = Quaternion(0, 0, 0, 0);
@@ -103,10 +103,10 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a)
     q_omega.q_3 = half_q_1 * w.y - half_q_2 * w.z + half_q_4 * w.x;
     q_omega.q_4 = half_q_1 * w.z + half_q_2 * w.y - half_q_3 * w.x;
 
-    q.q_1 = (q.q_1 + (q_omega.q_1 * deltat)) * oneMinusGain - gain*(q_am.q_1);
-    q.q_2 = (q.q_2 + (q_omega.q_2 * deltat)) * oneMinusGain - gain*(q_am.q_2);
-    q.q_3 = (q.q_3 + (q_omega.q_3 * deltat)) * oneMinusGain - gain*(q_am.q_3);
-    q.q_4 = (q.q_4 + (q_omega.q_4 * deltat)) * oneMinusGain - gain*(q_am.q_4);
+    q.q_1 = (q.q_1 + (q_omega.q_1 * deltat)) * one_minus_gain - gain*(q_am.q_1);
+    q.q_2 = (q.q_2 + (q_omega.q_2 * deltat)) * one_minus_gain - gain*(q_am.q_2);
+    q.q_3 = (q.q_3 + (q_omega.q_3 * deltat)) * one_minus_gain - gain*(q_am.q_3);
+    q.q_4 = (q.q_4 + (q_omega.q_4 * deltat)) * one_minus_gain - gain*(q_am.q_4);
 
     q.norm();
 }

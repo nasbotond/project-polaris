@@ -177,7 +177,6 @@ void VtkViewer::render(const ImVec2 size)
 void VtkViewer::addActor(const vtkSmartPointer<vtkProp>& actor)
 {
 	renderer->AddActor(actor);
-	// renderer->ResetCamera();
 }
 
 void VtkViewer::addActors(const vtkSmartPointer<vtkPropCollection>& actors)
@@ -199,24 +198,25 @@ void VtkViewer::removeActor(const vtkSmartPointer<vtkProp>& actor)
 vtkSmartPointer<vtkTransform> VtkViewer::getNewTransform(const std::vector<double>& vector)
 {
 	// Generate a random start and end point
-    double startPoint[3] = {0, 0, 0};
+    double start_point[3] = {0, 0, 0};
+    // double end_point[3] = {0.0, 0.0, 1.0};
     float x = -sin(vector.at(1));
     float y = cos(vector.at(1))*sin(vector.at(0));
     // Negate z to make arrow point down (towards the earth)
     float z = cos(vector.at(1))*cos(vector.at(0));
 
-    double endPoint[3] = {x, y, z};
-    vtkSmartPointer<vtkMinimalStandardRandomSequence> rng = vtkSmartPointer<vtkMinimalStandardRandomSequence>::New();
+    double end_point[3] = {x, y, z};
+    vtkNew<vtkMinimalStandardRandomSequence> rng;
 
     // Compute a basis
-    double normalizedX[3];
-    double normalizedY[3];
-    double normalizedZ[3];
+    double normalized_x[3];
+    double normalized_y[3];
+    double normalized_z[3];
 
     // // The X axis is a vector from start to end
-    vtkMath::Subtract(endPoint, startPoint, normalizedX);
-    double length = vtkMath::Norm(normalizedX);
-    vtkMath::Normalize(normalizedX);
+    vtkMath::Subtract(end_point, start_point, normalized_x);
+    double length = vtkMath::Norm(normalized_x);
+    vtkMath::Normalize(normalized_x);
 
     // The Z axis is an arbitrary vector cross X
     double arbitrary[3];
@@ -225,26 +225,26 @@ vtkSmartPointer<vtkTransform> VtkViewer::getNewTransform(const std::vector<doubl
         rng->Next();
         arbitrary[i] = rng->GetRangeValue(-10, 10);
     }
-    vtkMath::Cross(normalizedX, arbitrary, normalizedZ);
-    vtkMath::Normalize(normalizedZ);
+    vtkMath::Cross(normalized_x, arbitrary, normalized_z);
+    vtkMath::Normalize(normalized_z);
 
     // The Y axis is Z cross X
-    vtkMath::Cross(normalizedZ, normalizedX, normalizedY);
-    vtkSmartPointer<vtkMatrix4x4> matrix = vtkSmartPointer<vtkMatrix4x4>::New();
+    vtkMath::Cross(normalized_z, normalized_x, normalized_y);
+    vtkNew<vtkMatrix4x4> matrix;
 
     // Create the direction cosine matrix
     matrix->Identity();
     for (auto i = 0; i < 3; i++)
     {
-        matrix->SetElement(i, 0, normalizedX[i]);
-        matrix->SetElement(i, 1, normalizedY[i]);
-        matrix->SetElement(i, 2, normalizedZ[i]);
+        matrix->SetElement(i, 0, normalized_x[i]);
+        matrix->SetElement(i, 1, normalized_y[i]);
+        matrix->SetElement(i, 2, normalized_z[i]);
     }
 
     // Apply the transforms
     auto transform = vtkSmartPointer<vtkTransform>::New();
-
-    transform->Translate(startPoint);
+    // vtkNew<vtkTransform> transform;
+    transform->Translate(start_point);
     transform->Concatenate(matrix);
     transform->Scale(length, length, length);
 
@@ -253,13 +253,13 @@ vtkSmartPointer<vtkTransform> VtkViewer::getNewTransform(const std::vector<doubl
 
 vtkSmartPointer<vtkPlaneSource> VtkViewer::getNewPlaneSource(const std::vector<double>& vector)
 {
-	vtkSmartPointer<vtkPlaneSource> planeSource = vtkSmartPointer<vtkPlaneSource>::New();
-	planeSource->SetOrigin(0.0, 0.0, 0.0);
-	planeSource->SetPoint1(0.5*cos(vector.at(1))*cos(vector.at(2)), 0.5*(cos(vector.at(2))*sin(vector.at(1))*sin(vector.at(0)) - cos(vector.at(0))*sin(vector.at(2))), 0.5*(cos(vector.at(0))*cos(vector.at(2))*sin(vector.at(1)) + sin(vector.at(0))*sin(vector.at(2))));
-	planeSource->SetPoint2(0.25*cos(vector.at(1))*sin(vector.at(2)), 0.25*(cos(vector.at(0))*cos(vector.at(2)) + sin(vector.at(1))*sin(vector.at(0))*sin(vector.at(2))), 0.25*(cos(vector.at(0))*sin(vector.at(1))*sin(vector.at(2)) - cos(vector.at(2))*sin(vector.at(0))));
-	planeSource->SetCenter(0.0, 0.0, 0.0);
-	planeSource->Update();
-	return planeSource;
+	vtkSmartPointer<vtkPlaneSource> plane_source = vtkSmartPointer<vtkPlaneSource>::New();
+	plane_source->SetOrigin(0.0, 0.0, 0.0);
+	plane_source->SetPoint1(0.5*cos(vector.at(1))*cos(vector.at(2)), 0.5*(cos(vector.at(2))*sin(vector.at(1))*sin(vector.at(0)) - cos(vector.at(0))*sin(vector.at(2))), 0.5*(cos(vector.at(0))*cos(vector.at(2))*sin(vector.at(1)) + sin(vector.at(0))*sin(vector.at(2))));
+	plane_source->SetPoint2(0.25*cos(vector.at(1))*sin(vector.at(2)), 0.25*(cos(vector.at(0))*cos(vector.at(2)) + sin(vector.at(1))*sin(vector.at(0))*sin(vector.at(2))), 0.25*(cos(vector.at(0))*sin(vector.at(1))*sin(vector.at(2)) - cos(vector.at(2))*sin(vector.at(0))));
+	plane_source->SetCenter(0.0, 0.0, 0.0);
+	plane_source->Update();
+	return plane_source;
 }
 
 void VtkViewer::updateActors(const vtkSmartPointer<vtkActorCollection>& actors, const std::vector<double>& vector)
