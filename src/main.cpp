@@ -38,8 +38,8 @@ static std::string _labelPrefix(const char* const label)
 	float width = ImGui::CalcItemWidth();
 
 	float x = ImGui::GetCursorPosX();
-	ImGui::Text("%s", label); 
-	ImGui::SameLine(); 
+	ImGui::Text("%s", label);
+	ImGui::SameLine();
 	ImGui::SetCursorPosX(x + width * 0.6f + ImGui::GetStyle().ItemInnerSpacing.x);
 	ImGui::SetNextItemWidth(-1);
 
@@ -407,7 +407,7 @@ int main(int argc, char* argv[])
 
         // if (show_demo_window) ImGui::ShowDemoWindow();
 		// if (show_style_editor) ImGui::ShowStyleEditor();
-
+        ImGui::ShowDemoWindow();
         {            
             ImGui::Begin("Menu");
 
@@ -444,8 +444,8 @@ int main(int argc, char* argv[])
                 ImGui::InputInt(_labelPrefix("  Range to:").c_str(), &end_index); 
             }            
 
-            static int freq = 286;
-            ImGui::InputInt(_labelPrefix("Sample frequency:").c_str(), &freq);
+            static float freq = 286.0;
+            ImGui::InputFloat(_labelPrefix("Sample frequency:").c_str(), &freq, 0.01f, 1.0f, "%.3f");
 
             static float comp_gain = 0.2f;
             ImGui::InputFloat(_labelPrefix("Comp. filter gain:").c_str(), &comp_gain, 0.01f, 1.0f, "%.3f");
@@ -548,22 +548,12 @@ int main(int argc, char* argv[])
                         vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
                     }
 
-                    ImGui::Checkbox(_labelPrefix("Loop:").c_str(), &loop);
-                    if(is_playing)
-                    {
-                        if(ImGui::Button("Stop")) 
-                        {
-                            is_playing = false;
-                        }
-                    }
-                    else if(ImGui::Button("Play"))
-                    {
-                        is_playing = true;
-                    }
-                    ImGui::SameLine();
-
-                    if(ImGui::Button("Previous index"))
-                    {
+                    ImGui::Text("");
+                    float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
+                    ImGui::SameLine(ImGui::GetCursorPosX()+ImGui::CalcItemWidth()*0.95f+spacing);
+                    ImGui::PushButtonRepeat(true);
+                    if(ImGui::ArrowButton("##left", ImGuiDir_Left)) 
+                    { 
                         if(vector_index < 1)
                         {
                             vector_index = gravity_vectors_madg.size()-1;
@@ -581,12 +571,11 @@ int main(int argc, char* argv[])
                             vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                             vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(vector_index));
                             vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
-                        }
+                        } 
                     }
-                    ImGui::SameLine();
-
-                    if(ImGui::Button("Next index"))
-                    {
+                    ImGui::SameLine(0.0f, spacing);
+                    if(ImGui::ArrowButton("##right", ImGuiDir_Right))
+                    { 
                         if(vector_index >= gravity_vectors_madg.size()-1) 
                         {
                             vector_index = 0;
@@ -606,6 +595,23 @@ int main(int argc, char* argv[])
                             vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
                         }
                     }
+                    ImGui::PopButtonRepeat();
+
+                    ImGui::Text("");
+                    ImGui::SameLine(ImGui::GetCursorPosX()+ImGui::CalcItemWidth()*0.95f+spacing);
+                    if(is_playing)
+                    {
+                        if(ImGui::Button("Stop")) 
+                        {
+                            is_playing = false;
+                        }
+                    }
+                    else if(ImGui::Button("Play"))
+                    {
+                        is_playing = true;
+                    }
+
+                    ImGui::Checkbox(_labelPrefix("Loop:").c_str(), &loop);
                 }
 
                 if(is_playing)
