@@ -17,25 +17,32 @@ class Quaternion
 
         float roll()
         {
-            // return atan2(2*q_3*q_4 - 2*q_1*q_2, 2*q_1*q_1 + 2*q_4*q_4 - 1);
-            return atan2(2*q_3*q_4 + 2*q_1*q_2, 1 - 2*q_2*q_2 + 2*q_3*q_3);
+            float sin_p = 2*q_2*q_4 + 2*q_1*q_3;
+            if(abs(sin_p) >= 0.999)
+            {
+                return 0;
+            }
+            return atan2(2*q_3*q_4 - 2*q_1*q_2, 2*q_1*q_1 + 2*q_4*q_4 - 1); // MADG NED
         }
 
         float pitch()
         {
-            // return -asin(2*q_2*q_4 + 2*q_1*q_3);
-            float sin_p = 2*q_1*q_3 - 2*q_2*q_4;
-            if(std::abs(sin_p) >= 1.0)
+            float sin_p = 2*q_2*q_4 + 2*q_1*q_3;
+            if(std::abs(sin_p) >= 0.999)
             {
                 return std::copysign(M_PI/2, sin_p);
             }
-            return asin(2*q_1*q_3 - 2*q_2*q_4);
+            return -asin(sin_p);
         }
 
         float yaw()
         {
-            // return atan2(2*q_2*q_3 - 2*q_1*q_4, 2*q_1*q_1 + 2*q_2*q_2 - 1);
-            return atan2(2*q_2*q_3 + 2*q_1*q_4, 1 - 2*q_3*q_3 + 2*q_4*q_4);
+            float sin_p = 2*q_2*q_4 + 2*q_1*q_3;
+            if(abs(sin_p) >= 0.999)
+            {
+                return std::copysign(2.0*atan2(q_2, q_1), sin_p);
+            }
+            return atan2(2*q_2*q_3 - 2*q_1*q_4, 2*q_1*q_1 + 2*q_2*q_2 - 1); // MADG NED
         }
 
         void norm()
