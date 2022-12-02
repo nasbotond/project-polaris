@@ -21,7 +21,7 @@ include_directories(${tfd_inc})
 # In this CMakeLists.txt file, components are all built separately and linked together
 # If you prefer to compile source files + dependencies (OpenGL loaders, imgui, VtkViewer, etc.)
 # together, please see CMakeLists-alt.txt
-add_executable(${EXEC_NAME} ${SOURCE_DIR}/main.cpp ${SOURCE_DIR}/madgwick_filter.cpp ${SOURCE_DIR}/comp_filter.cpp ${tfd_src} ${SOURCE_DIR}/app.cpp)
+add_executable(${EXEC_NAME} ${SOURCE_DIR}/main.cpp ${SOURCE_DIR}/madgwick_filter.cpp ${SOURCE_DIR}/comp_filter.cpp ${tfd_src} ${SOURCE_DIR}/app.cpp ${SOURCE_DIR}/gui.cpp)
 
 # OpenGL
 find_package(OpenGL REQUIRED)
