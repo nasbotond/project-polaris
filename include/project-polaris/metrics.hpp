@@ -1,3 +1,5 @@
+#pragma once
+
 #include "quaternion.hpp"
 
 class Metrics
