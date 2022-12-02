@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <array>
+#include <thread>
 
 // OpenGL Loader
 #include <GL/gl3w.h> // GL3w, initialized with gl3wInit() below
@@ -32,6 +33,26 @@
 
 char const* selectedfolderPath;
 std::string fPath;
+static std::thread t;
+
+// tinyfiledialogs
+void* call_from_thread() 
+{
+	selectedfolderPath = tinyfd_selectFolderDialog("Select Folder with data files in it", "");
+
+    // If the dialog is open and we try to open it again, stop the program until it is closed
+    if (!selectedfolderPath)
+    {
+        // Return to UI
+        return NULL;
+    }
+    else
+    {
+        fPath = selectedfolderPath;
+    }
+	return NULL;
+}
+
 
 static std::string _labelPrefix(const char* const label)
 {
@@ -417,15 +438,27 @@ int main(int argc, char* argv[])
                 fPath = "";
 
                 // If the dialog is open and we try to open it again, stop the program until it is closed
-                selectedfolderPath = tinyfd_selectFolderDialog("Select Folder with data files in it", "");
-                if (!selectedfolderPath)
-                {
-                    // Return to UI
-                }
-                else
-                {
-                    fPath = selectedfolderPath;
-                }
+				if(t.joinable())
+				{
+					t.join();
+					t = std::thread(&call_from_thread);
+				}
+				else
+				{
+					t = std::thread(&call_from_thread);
+				}
+
+
+                // // If the dialog is open and we try to open it again, stop the program until it is closed
+                // selectedfolderPath = tinyfd_selectFolderDialog("Select Folder with data files in it", "");
+                // if (!selectedfolderPath)
+                // {
+                //     // Return to UI
+                // }
+                // else
+                // {
+                //     fPath = selectedfolderPath;
+                // }
             }
 
             ImGui::Text("%s", fPath.c_str());
@@ -457,6 +490,11 @@ int main(int argc, char* argv[])
 
             if(ImGui::Button("Calculate"))
             {     
+                if (t.joinable())
+				{
+					t.join();
+				}
+
                 if(fPath.length() != 0)
                 {
                     gravity_vectors_madg.clear();
@@ -868,6 +906,12 @@ int main(int argc, char* argv[])
 
         glfwSwapBuffers(window);
     }
+
+    // Wait for the thread to close before exiting
+	if (t.joinable())
+	{
+		t.join();
+	}
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
