@@ -34,6 +34,12 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
     // q_am.q_3 = cos(0.5*theta)*sin(0.5*phi)*cos(0.5*psi) + sin(0.5*theta)*cos(0.5*phi)*sin(0.5*psi);
     // q_am.q_4 = cos(0.5*theta)*cos(0.5*phi)*sin(0.5*psi) - sin(0.5*theta)*sin(0.5*phi)*cos(0.5*psi);
 
+    if((m.x == 0.0) && (m.y == 0.0) && (m.z == 0.0))
+    {
+        updateFilter(w, a);
+        return;
+    }
+
     q_am = Quaternion::getOrientationFromAccMag(a, m);
     
     // Vec3 Rz = a;
@@ -83,7 +89,6 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
 
 void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a)
 {
-    float norm;
     float one_minus_gain = 1 - gain;
 
     Quaternion q_omega = Quaternion(0, 0, 0, 0);
