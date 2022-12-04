@@ -53,8 +53,9 @@ namespace GUI
     static bool loop = false;
     static bool black_background = false;
 
-    static float comp_gain = 0.2f;
-    static float madg_beta = 0.2f;
+    static float comp_gain = 0.003f;
+    static float madg_beta = 0.18f;
+    static float madg_zeta = 0.0001f;
     static float freq = 286.0;
     static int end_index = 45000;
     static int start_index = 0;
@@ -77,7 +78,7 @@ namespace GUI
     // static bool show_demo_window = false;
 
     // tinyfiledialogs
-    void* call_from_thread() 
+    void* call_from_thread()
     {
         selectedfolderPath = tinyfd_selectFolderDialog("Select Folder with data files in it", "");
 
@@ -117,8 +118,8 @@ namespace GUI
         // Input
         ComplementaryFilter comp = ComplementaryFilter(deltat, comp_gain);
         ComplementaryFilter comp_mag = ComplementaryFilter(deltat, comp_gain);
-        MadgwickFilter madg = MadgwickFilter(deltat, madg_beta);
-        MadgwickFilter madg_mag = MadgwickFilter(deltat, madg_beta);
+        MadgwickFilter madg = MadgwickFilter(deltat, madg_beta, madg_zeta);
+        MadgwickFilter madg_mag = MadgwickFilter(deltat, madg_beta, madg_zeta);
 
         std::ofstream est_madg_mag;
         std::ofstream est_madg_no_mag;
@@ -395,9 +396,11 @@ namespace GUI
     
             ImGui::InputFloat(_labelPrefix("Sample frequency:").c_str(), &freq, 0.01f, 1.0f, "%.3f");
 
-            ImGui::InputFloat(_labelPrefix("Comp. filter gain:").c_str(), &comp_gain, 0.01f, 1.0f, "%.5f");
+            ImGui::InputFloat(_labelPrefix("Comp. filter gain:").c_str(), &comp_gain, 0.001f, 0.01f, "%.5f");
 
-            ImGui::InputFloat(_labelPrefix("Madg. filter beta").c_str(), &madg_beta, 0.01f, 1.0f, "%.5f");
+            ImGui::InputFloat(_labelPrefix("Madg. filter beta:").c_str(), &madg_beta, 0.01f, 0.1f, "%.5f");
+
+            ImGui::InputFloat(_labelPrefix("Madg. filter zeta:").c_str(), &madg_zeta, 0.0001f, 0.001f, "%.5f");
 
             ImGui::Checkbox(_labelPrefix("Save results to files: ").c_str(), &save_to_file);
 
@@ -442,7 +445,7 @@ namespace GUI
             if(!is_calculated && loading)
             {
                 ImGui::SameLine();
-                ImGui::Text("Loading %c", "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3]);
+                ImGui::Text("Calculating... %c", "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3]);
             }
             ImGui::Text("");
 

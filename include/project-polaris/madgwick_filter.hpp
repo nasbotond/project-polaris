@@ -19,7 +19,7 @@
 // #define beta sqrt(3.0/4.0) * gyroMeasError
 // #define zeta sqrt(3.0/4.0) * gyroMeasDrift
 // #define beta 0.28
-#define zeta 0.0
+// #define zeta 0.0
 
 class MadgwickFilter
 {
@@ -27,7 +27,7 @@ class MadgwickFilter
 
     public:
 
-        MadgwickFilter(float deltat, float beta) : deltat(deltat), beta(beta), q(Quaternion(1.0, 0.0, 0.0, 0.0)) {}
+        MadgwickFilter(float deltat, float beta, float zeta) : deltat(deltat), beta(beta), zeta(zeta), q(Quaternion(1.0, 0.0, 0.0, 0.0)) {}
         ~MadgwickFilter() {}
 
         // Main functions
@@ -43,4 +43,5 @@ class MadgwickFilter
         float w_bx = 0, w_by = 0, w_bz = 0;
         float deltat;
         float beta;
+        float zeta;
 };
