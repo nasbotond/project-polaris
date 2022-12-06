@@ -8,7 +8,7 @@ void ComplementaryFilter::setInitialState(Quaternion &initial)
     q.q_4 = initial.q_4;
 }
 
-void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 &m)
+void ComplementaryFilter::updateFilter(const Vec3 w, const Vec3 a, const Vec3 m)
 {
     float one_minus_gain = 1.0 - gain;
 
@@ -87,7 +87,7 @@ void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 
     q.norm();
 }
 
-void ComplementaryFilter::updateFilter(const Vec3 &w, const Vec3 &a)
+void ComplementaryFilter::updateFilter(const Vec3 w, const Vec3 a)
 {
     float one_minus_gain = 1 - gain;
 

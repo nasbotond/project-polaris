@@ -135,6 +135,7 @@ namespace GUI
         std::vector<Vec3> w = CsvReader::getVec3Data(fPath + "imu_gyr.csv");
         std::vector<Vec3> m = CsvReader::getVec3Data(fPath + "imu_mag.csv");
         std::vector<Quaternion> gt = CsvReader::getQuatData(fPath + "opt_quat.csv");
+        std::vector<int> mov = CsvReader::get1DData(fPath + "movement.csv");
 
         if(max_index)
         {
@@ -220,7 +221,7 @@ namespace GUI
             // Quaternion err_quat = Metrics::error_quaternion_earth(read.gt.at(i), madg_mag.q);
             // Quaternion err_quat = Metrics::error_quaternion(read.gt.at(i), enu_est);
             // These are in ENU
-            if(!gt.at(i).isNaN())
+            if((!gt.at(i).isNaN()) && (mov.at(i)==1))
             {
                 Quaternion err_quat_madg_mag = Metrics::error_quaternion_earth(gt.at(i), enu_madg_mag);
                 Quaternion err_quat_madg_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_madg);

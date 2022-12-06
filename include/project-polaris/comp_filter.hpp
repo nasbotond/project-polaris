@@ -27,8 +27,8 @@ class ComplementaryFilter
         ~ComplementaryFilter() {}
 
         // Main functions
-        void updateFilter(const Vec3 &w, const Vec3 &a, const Vec3 &m);
-        void updateFilter(const Vec3 &w, const Vec3 &a);
+        void updateFilter(const Vec3 w, const Vec3 a, const Vec3 m);
+        void updateFilter(const Vec3 w, const Vec3 a);
 
         // Helper functions
         float sgn(float v);

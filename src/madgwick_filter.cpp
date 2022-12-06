@@ -8,7 +8,7 @@ void MadgwickFilter::setInitialState(Quaternion &initial)
     q.q_4 = initial.q_4;
 }
 
-void MadgwickFilter::updateMARGFilter(Vec3 &w, Vec3 &a, Vec3 &m)
+void MadgwickFilter::updateMARGFilter(Vec3 w, Vec3 a, Vec3 m)
 {
     float f_1, f_2, f_3, f_4, f_5, f_6;
     float J_11or24, J_12or23, J_13or22, J_41, J_42, J_43, J_44, J_51, J_52, J_14or21, J_32, J_33, J_53, J_54, J_61, J_62, J_63, J_64;
@@ -139,7 +139,7 @@ void MadgwickFilter::updateMARGFilter(Vec3 &w, Vec3 &a, Vec3 &m)
     b_z = h_z;
 }
 
-void MadgwickFilter::updateIMUFilter(Vec3 &w, Vec3 &a)
+void MadgwickFilter::updateIMUFilter(Vec3 w, Vec3 a)
 {
     float q_1 = q.q_1;
     float q_2 = q.q_2;

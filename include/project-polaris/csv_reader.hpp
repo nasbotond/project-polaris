@@ -33,9 +33,9 @@ class CsvReader
             std::stringstream ss(s);
             std::string item;
 
-            while (getline(ss, item, delim))
+            while(getline(ss, item, delim))
             {
-                if (item.length() < 1)
+                if(item.length() < 1)
                 {
                     result.push_back(0.0);
                 }
@@ -59,9 +59,9 @@ class CsvReader
             std::fstream file(path, std::ios::in);
             // std::fstream afile(path, std::ios::in);
             std::string line;
-            if (file.is_open())
+            if(file.is_open())
             {
-                while (getline(file, line))
+                while(getline(file, line))
                 {
                     std::vector<float> s = split(line, ',');
                     result.push_back(Vec3(s.at(0), s.at(1), s.at(2)));
@@ -84,9 +84,9 @@ class CsvReader
             std::vector<Quaternion> gt;
             std::fstream file(path, std::ios::in);
             std::string line;
-            if (file.is_open())
+            if(file.is_open())
             {
-                while (getline(file, line))
+                while(getline(file, line))
                 {
                     std::vector<float> gt_split = split(line, ',');
                     gt.push_back(Quaternion(gt_split.at(0), gt_split.at(1), gt_split.at(2), gt_split.at(3)));
@@ -97,7 +97,34 @@ class CsvReader
                 throw std::runtime_error("Error: failed to open file");
             }
             return gt;
-        }        
+        }
+
+        /**
+         * @brief Read 1D file contents into vector line by line.
+         *
+         * The format of the file is consistent with a ',' used as a delimiter. This function essentailly tokenizes the data line by line.
+         */
+        static std::vector<int> get1DData(const std::string &path)
+        {
+            std::vector<int> result;
+
+            std::fstream file(path, std::ios::in);
+            // std::fstream afile(path, std::ios::in);
+            std::string line;
+            if(file.is_open())
+            {
+                while(getline(file, line))
+                {
+                    std::vector<float> s = split(line, ',');
+                    result.push_back((int)s.at(0));
+                }
+            }
+            else
+            {
+                throw std::runtime_error("Error: failed to open file");
+            }
+            return result;
+        }      
 
         static std::vector<Vec3> getRMSE(const std::string &path, std::string &results_suffix)
         {
@@ -120,9 +147,9 @@ class CsvReader
 
             std::fstream afile(path + results_suffix + "/error_madg_mag.csv", std::ios::in);
             std::string aline;
-            if (afile.is_open())
+            if(afile.is_open())
             {
-                while (getline(afile, aline))
+                while(getline(afile, aline))
                 {
                     std::vector<float> a_split = split(aline, ',');
                     if(a_split.at(0) != 9999)
@@ -141,7 +168,7 @@ class CsvReader
 
             std::fstream wfile(path + results_suffix + "/error_madg_no_mag.csv", std::ios::in);
             std::string gline;
-            if (wfile.is_open())
+            if(wfile.is_open())
             {
                 while (getline(wfile, gline))
                 {
@@ -161,7 +188,7 @@ class CsvReader
 
             std::fstream mfile(path + results_suffix + "/error_comp_mag.csv", std::ios::in);
             std::string mline;
-            if (mfile.is_open())
+            if(mfile.is_open())
             {
                 while (getline(mfile, mline))
                 {
@@ -181,9 +208,9 @@ class CsvReader
 
             std::fstream file(path + results_suffix + "/error_comp_no_mag.csv", std::ios::in);
             std::string line;
-            if (file.is_open())
+            if(file.is_open())
             {
-                while (getline(file, line))
+                while(getline(file, line))
                 {
                     std::vector<float> gt_split = split(line, ',');
                     if(gt_split.at(0) != 9999)
@@ -206,7 +233,7 @@ class CsvReader
 
             std::ofstream rmse_out;
             rmse_out.open (path + results_suffix + "/rmse_out.csv");
-            for (int i = 0; i < result.size(); ++i) 
+            for(int i = 0; i < result.size(); ++i)
             {  
                 rmse_out << result.at(i).to_csv_string() << "\n";
             }
