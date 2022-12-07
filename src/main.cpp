@@ -22,13 +22,13 @@ int main(int argc, char* argv[])
 //     std::vector<std::vector<float>> grand_row_madg_inc( 29 , std::vector<float> (51, 0));
 //     std::vector<std::vector<float>> grand_row_madg_head( 29 , std::vector<float> (51, 0));
 
-//     std::vector<float> grand_row_comp_mag_total( 100,0 );
-//     std::vector<float> grand_row_comp_mag_inc( 100,0 );
-//     std::vector<float> grand_row_comp_mag_head( 100,0 );
+//     std::vector<float> grand_row_naive_mag_total( 100,0 );
+//     std::vector<float> grand_row_naive_mag_inc( 100,0 );
+//     std::vector<float> grand_row_naive_mag_head( 100,0 );
 
-//     std::vector<float> grand_row_comp_total( 100,0 );
-//     std::vector<float> grand_row_comp_inc( 100,0 );
-//     std::vector<float> grand_row_comp_head( 100,0 );
+//     std::vector<float> grand_row_naive_total( 100,0 );
+//     std::vector<float> grand_row_naive_inc( 100,0 );
+//     std::vector<float> grand_row_naive_head( 100,0 );
 
 //     for(const auto & entry : fs::directory_iterator(sPath))
 //     {
@@ -182,102 +182,102 @@ int main(int argc, char* argv[])
 //             inc_rmse_madg_no_mag_deg.close();
 //             head_rmse_madg_no_mag_deg.close();
 
-//             // Complementary
+//             // Naive
 
-//             std::ofstream total_rmse_comp_mag_deg;
-//             std::ofstream inc_rmse_comp_mag_deg;
-//             std::ofstream head_rmse_comp_mag_deg;
+//             std::ofstream total_rmse_naive_mag_deg;
+//             std::ofstream inc_rmse_naive_mag_deg;
+//             std::ofstream head_rmse_naive_mag_deg;
 
-//             std::ofstream total_rmse_comp_no_mag_deg;
-//             std::ofstream inc_rmse_comp_no_mag_deg;
-//             std::ofstream head_rmse_comp_no_mag_deg;
+//             std::ofstream total_rmse_naive_no_mag_deg;
+//             std::ofstream inc_rmse_naive_no_mag_deg;
+//             std::ofstream head_rmse_naive_no_mag_deg;
 
-//             total_rmse_comp_mag_deg.open(sPath + fileName + "/total_rmse_comp_mag_deg.csv");
-//             inc_rmse_comp_mag_deg.open(sPath + fileName + "/inc_rmse_comp_mag_deg.csv");
-//             head_rmse_comp_mag_deg.open(sPath + fileName + "/head_rmse_comp_mag_deg.csv");
+//             total_rmse_naive_mag_deg.open(sPath + fileName + "/total_rmse_naive_mag_deg.csv");
+//             inc_rmse_naive_mag_deg.open(sPath + fileName + "/inc_rmse_naive_mag_deg.csv");
+//             head_rmse_naive_mag_deg.open(sPath + fileName + "/head_rmse_naive_mag_deg.csv");
 
-//             total_rmse_comp_no_mag_deg.open(sPath + fileName + "/total_rmse_comp_no_mag_deg.csv");
-//             inc_rmse_comp_no_mag_deg.open(sPath + fileName + "/inc_rmse_comp_no_mag_deg.csv");
-//             head_rmse_comp_no_mag_deg.open(sPath + fileName + "/head_rmse_comp_no_mag_deg.csv");
+//             total_rmse_naive_no_mag_deg.open(sPath + fileName + "/total_rmse_naive_no_mag_deg.csv");
+//             inc_rmse_naive_no_mag_deg.open(sPath + fileName + "/inc_rmse_naive_no_mag_deg.csv");
+//             head_rmse_naive_no_mag_deg.open(sPath + fileName + "/head_rmse_naive_no_mag_deg.csv");
 
 //             int grand_index = 0;
 
-//             for(float comp_gain = 0.0001; comp_gain <= 0.01; comp_gain=comp_gain+0.0001)
+//             for(float naive_gain = 0.0001; naive_gain <= 0.01; naive_gain=naive_gain+0.0001)
 //             {
-//                 total_rmse_comp_mag_deg << comp_gain;
-//                 inc_rmse_comp_mag_deg << comp_gain;
-//                 head_rmse_comp_mag_deg << comp_gain;
+//                 total_rmse_naive_mag_deg << naive_gain;
+//                 inc_rmse_naive_mag_deg << naive_gain;
+//                 head_rmse_naive_mag_deg << naive_gain;
 
-//                 total_rmse_comp_no_mag_deg << comp_gain;
-//                 inc_rmse_comp_no_mag_deg << comp_gain;
-//                 head_rmse_comp_no_mag_deg << comp_gain;
+//                 total_rmse_naive_no_mag_deg << naive_gain;
+//                 inc_rmse_naive_no_mag_deg << naive_gain;
+//                 head_rmse_naive_no_mag_deg << naive_gain;
 
-//                 float sum_total_comp_mag = 0.0;
-//                 float sum_total_comp_no_mag = 0.0;
+//                 float sum_total_naive_mag = 0.0;
+//                 float sum_total_naive_no_mag = 0.0;
 
-//                 float sum_inc_comp_mag = 0.0;
-//                 float sum_inc_comp_no_mag = 0.0;
+//                 float sum_inc_naive_mag = 0.0;
+//                 float sum_inc_naive_no_mag = 0.0;
 
-//                 float sum_head_comp_mag = 0.0;
-//                 float sum_head_comp_no_mag = 0.0;
+//                 float sum_head_naive_mag = 0.0;
+//                 float sum_head_naive_no_mag = 0.0;
 
 //                 int rows = 0;
 
-//                 ComplementaryFilter comp = ComplementaryFilter(deltat, comp_gain);
-//                 ComplementaryFilter comp_mag = ComplementaryFilter(deltat, comp_gain);
+//                 NaiveFilter naive = NaiveFilter(deltat, naive_gain);
+//                 NaiveFilter naive_mag = NaiveFilter(deltat, naive_gain);
 
-//                 comp_mag.setInitialState(initial_state);
-//                 comp.setInitialState(initial_state);
+//                 naive_mag.setInitialState(initial_state);
+//                 naive.setInitialState(initial_state);
 
 //                 for (int i = 0; i < a.size(); ++i)
 //                 {
-//                     comp_mag.updateFilter(w.at(i), a.at(i), m.at(i));        
-//                     comp.updateFilter(w.at(i), a.at(i));
+//                     naive_mag.updateFilter(w.at(i), a.at(i), m.at(i));        
+//                     naive.updateFilter(w.at(i), a.at(i));
 
 //                     if((!gt.at(i).isNaN()) && (mov.at(i)==1))
 //                     {
 //                         rows++;
 //                         // Convert to ENU from NED
-//                         Quaternion enu_comp_mag = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), comp_mag.q);
-//                         Quaternion enu_comp = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), comp.q);
+//                         Quaternion enu_naive_mag = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), naive_mag.q);
+//                         Quaternion enu_naive = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), naive.q);
 
-//                         Quaternion err_quat_comp_mag = Metrics::error_quaternion_earth(gt.at(i), enu_comp_mag);
-//                         Quaternion err_quat_comp_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_comp);
+//                         Quaternion err_quat_naive_mag = Metrics::error_quaternion_earth(gt.at(i), enu_naive_mag);
+//                         Quaternion err_quat_naive_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_naive);
 
-//                         sum_total_comp_mag += Metrics::total_error(err_quat_comp_mag)*Metrics::total_error(err_quat_comp_mag);
-//                         sum_total_comp_no_mag += Metrics::total_error(err_quat_comp_no_mag)*Metrics::total_error(err_quat_comp_no_mag);
+//                         sum_total_naive_mag += Metrics::total_error(err_quat_naive_mag)*Metrics::total_error(err_quat_naive_mag);
+//                         sum_total_naive_no_mag += Metrics::total_error(err_quat_naive_no_mag)*Metrics::total_error(err_quat_naive_no_mag);
 
-//                         sum_inc_comp_mag += Metrics::inclination_error(err_quat_comp_mag)*Metrics::inclination_error(err_quat_comp_mag);
-//                         sum_inc_comp_no_mag += Metrics::inclination_error(err_quat_comp_no_mag)*Metrics::inclination_error(err_quat_comp_no_mag);
+//                         sum_inc_naive_mag += Metrics::inclination_error(err_quat_naive_mag)*Metrics::inclination_error(err_quat_naive_mag);
+//                         sum_inc_naive_no_mag += Metrics::inclination_error(err_quat_naive_no_mag)*Metrics::inclination_error(err_quat_naive_no_mag);
 
-//                         sum_head_comp_mag += Metrics::heading_error(err_quat_comp_mag)*Metrics::heading_error(err_quat_comp_mag);
-//                         sum_head_comp_no_mag += Metrics::heading_error(err_quat_comp_no_mag)*Metrics::heading_error(err_quat_comp_no_mag);
+//                         sum_head_naive_mag += Metrics::heading_error(err_quat_naive_mag)*Metrics::heading_error(err_quat_naive_mag);
+//                         sum_head_naive_no_mag += Metrics::heading_error(err_quat_naive_no_mag)*Metrics::heading_error(err_quat_naive_no_mag);
 //                     }
 //                 }
-//                 total_rmse_comp_mag_deg << "," << sqrt(sum_total_comp_mag/rows)*180/M_PI << "\n";
-//                 inc_rmse_comp_mag_deg << "," << sqrt(sum_inc_comp_mag/rows)*180/M_PI << "\n";
-//                 head_rmse_comp_mag_deg << "," << sqrt(sum_head_comp_mag/rows)*180/M_PI << "\n";
+//                 total_rmse_naive_mag_deg << "," << sqrt(sum_total_naive_mag/rows)*180/M_PI << "\n";
+//                 inc_rmse_naive_mag_deg << "," << sqrt(sum_inc_naive_mag/rows)*180/M_PI << "\n";
+//                 head_rmse_naive_mag_deg << "," << sqrt(sum_head_naive_mag/rows)*180/M_PI << "\n";
 
-//                 total_rmse_comp_no_mag_deg << "," << sqrt(sum_total_comp_no_mag/rows)*180/M_PI << "\n";
-//                 inc_rmse_comp_no_mag_deg << "," << sqrt(sum_inc_comp_no_mag/rows)*180/M_PI << "\n";
-//                 head_rmse_comp_no_mag_deg << "," << sqrt(sum_head_comp_no_mag/rows)*180/M_PI << "\n";
+//                 total_rmse_naive_no_mag_deg << "," << sqrt(sum_total_naive_no_mag/rows)*180/M_PI << "\n";
+//                 inc_rmse_naive_no_mag_deg << "," << sqrt(sum_inc_naive_no_mag/rows)*180/M_PI << "\n";
+//                 head_rmse_naive_no_mag_deg << "," << sqrt(sum_head_naive_no_mag/rows)*180/M_PI << "\n";
 
-//                 grand_row_comp_mag_total.at(grand_index) += sqrt(sum_total_comp_mag/rows)*180/M_PI;
-//                 grand_row_comp_mag_inc.at(grand_index) += sqrt(sum_inc_comp_mag/rows)*180/M_PI;
-//                 grand_row_comp_mag_head.at(grand_index) += sqrt(sum_head_comp_mag/rows)*180/M_PI;
+//                 grand_row_naive_mag_total.at(grand_index) += sqrt(sum_total_naive_mag/rows)*180/M_PI;
+//                 grand_row_naive_mag_inc.at(grand_index) += sqrt(sum_inc_naive_mag/rows)*180/M_PI;
+//                 grand_row_naive_mag_head.at(grand_index) += sqrt(sum_head_naive_mag/rows)*180/M_PI;
 
-//                 grand_row_comp_total.at(grand_index) += sqrt(sum_total_comp_no_mag/rows)*180/M_PI;
-//                 grand_row_comp_inc.at(grand_index) += sqrt(sum_inc_comp_no_mag/rows)*180/M_PI;
-//                 grand_row_comp_head.at(grand_index) += sqrt(sum_head_comp_no_mag/rows)*180/M_PI;
+//                 grand_row_naive_total.at(grand_index) += sqrt(sum_total_naive_no_mag/rows)*180/M_PI;
+//                 grand_row_naive_inc.at(grand_index) += sqrt(sum_inc_naive_no_mag/rows)*180/M_PI;
+//                 grand_row_naive_head.at(grand_index) += sqrt(sum_head_naive_no_mag/rows)*180/M_PI;
 //                 grand_index++;
 //             }
-//             total_rmse_comp_mag_deg.close();
-//             inc_rmse_comp_mag_deg.close();
-//             head_rmse_comp_mag_deg.close();
+//             total_rmse_naive_mag_deg.close();
+//             inc_rmse_naive_mag_deg.close();
+//             head_rmse_naive_mag_deg.close();
 
-//             total_rmse_comp_no_mag_deg.close();
-//             inc_rmse_comp_no_mag_deg.close();
-//             head_rmse_comp_no_mag_deg.close();
+//             total_rmse_naive_no_mag_deg.close();
+//             inc_rmse_naive_no_mag_deg.close();
+//             head_rmse_naive_no_mag_deg.close();
 //         }
 //     }
 
@@ -331,13 +331,13 @@ int main(int argc, char* argv[])
 
 //     for(int i = 0; i < 100; ++i)
 //     {
-//         cmt << (i+1.0)/10000.0 << "," << grand_row_comp_mag_total.at(i)/divide_by << "\n";
-//         cmi << (i+1.0)/10000.0 << "," << grand_row_comp_mag_inc.at(i)/divide_by << "\n";
-//         cmh << (i+1.0)/10000.0 << "," << grand_row_comp_mag_head.at(i)/divide_by << "\n";
+//         cmt << (i+1.0)/10000.0 << "," << grand_row_naive_mag_total.at(i)/divide_by << "\n";
+//         cmi << (i+1.0)/10000.0 << "," << grand_row_naive_mag_inc.at(i)/divide_by << "\n";
+//         cmh << (i+1.0)/10000.0 << "," << grand_row_naive_mag_head.at(i)/divide_by << "\n";
 
-//         ct << (i+1.0)/10000.0 << "," << grand_row_comp_total.at(i)/divide_by << "\n";
-//         ci << (i+1.0)/10000.0 << "," << grand_row_comp_inc.at(i)/divide_by << "\n";
-//         ch << (i+1.0)/10000.0 << "," << grand_row_comp_head.at(i)/divide_by << "\n";
+//         ct << (i+1.0)/10000.0 << "," << grand_row_naive_total.at(i)/divide_by << "\n";
+//         ci << (i+1.0)/10000.0 << "," << grand_row_naive_inc.at(i)/divide_by << "\n";
+//         ch << (i+1.0)/10000.0 << "," << grand_row_naive_head.at(i)/divide_by << "\n";
 //     }
 
 //     mmt.close();
