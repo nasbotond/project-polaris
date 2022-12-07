@@ -73,6 +73,7 @@ namespace GUI
     static bool min_index = true;
     static bool max_index = true;
     static bool save_to_file = false;
+    static bool has_ground_truth = false;
 
     // static bool show_style_editor = false;
     // static bool show_demo_window = false;
@@ -115,6 +116,8 @@ namespace GUI
     {
         float deltat = 1.0f/(float)freq;
 
+        has_ground_truth = std::filesystem::exists(fPath + "opt_quat.csv");
+
         // Input
         ComplementaryFilter comp = ComplementaryFilter(deltat, comp_gain);
         ComplementaryFilter comp_mag = ComplementaryFilter(deltat, comp_gain);
@@ -134,8 +137,8 @@ namespace GUI
         std::vector<Vec3> a = CsvReader::getVec3Data(fPath + "imu_acc.csv");
         std::vector<Vec3> w = CsvReader::getVec3Data(fPath + "imu_gyr.csv");
         std::vector<Vec3> m = CsvReader::getVec3Data(fPath + "imu_mag.csv");
-        std::vector<Quaternion> gt = CsvReader::getQuatData(fPath + "opt_quat.csv");
-        std::vector<int> mov = CsvReader::get1DData(fPath + "movement.csv");
+        std::vector<int> mov;
+        std::vector<Quaternion> gt;
 
         if(max_index)
         {
@@ -175,10 +178,26 @@ namespace GUI
         est_comp_mag.open(fPath + results_suffix + "/est_comp_mag.csv");
         est_comp_no_mag.open(fPath + results_suffix + "/est_comp_no_mag.csv");
 
-        error_madg_mag.open(fPath + results_suffix + "/error_madg_mag.csv");
-        error_madg_no_mag.open(fPath + results_suffix + "/error_madg_no_mag.csv");
-        error_comp_mag.open(fPath + results_suffix + "/error_comp_mag.csv");
-        error_comp_no_mag.open(fPath + results_suffix + "/error_comp_no_mag.csv");  
+        if(has_ground_truth)
+        {
+            gt = CsvReader::getQuatData(fPath + "opt_quat.csv");
+            mov = CsvReader::get1DData(fPath + "movement.csv");
+            error_madg_mag.open(fPath + results_suffix + "/error_madg_mag.csv");
+            error_madg_no_mag.open(fPath + results_suffix + "/error_madg_no_mag.csv");
+            error_comp_mag.open(fPath + results_suffix + "/error_comp_mag.csv");
+            error_comp_no_mag.open(fPath + results_suffix + "/error_comp_no_mag.csv");
+        }
+        else
+        {
+            vtk_gt_open = false;
+
+            // fill vectors with zeroes
+            for(int i = 0; i < a.size(); ++i)
+            {
+                gt.push_back(Quaternion(0,0,0,0));
+                gravity_vectors_gt.push_back({0,0,0});
+            }
+        }
 
         comp_mag.setInitialState(initial_state);
         madg_mag.setInitialState(initial_state);
@@ -216,41 +235,33 @@ namespace GUI
             est_madg_no_mag << enu_madg.q_1 << "," << enu_madg.q_2 << "," << enu_madg.q_3 << "," << enu_madg.q_4 << "\n";
             est_comp_no_mag << enu_comp.q_1 << "," << enu_comp.q_2 << "," << enu_comp.q_3 << "," << enu_comp.q_4 << "\n";
 
-            // Quaternion enu_est = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), madg_mag.q);
-            // Quaternion err_quat = Metrics::error_quaternion(read.gt.at(i), madg_mag.q);
-            // Quaternion err_quat = Metrics::error_quaternion_earth(read.gt.at(i), madg_mag.q);
-            // Quaternion err_quat = Metrics::error_quaternion(read.gt.at(i), enu_est);
-            // These are in ENU
-            if((!gt.at(i).isNaN()) && (mov.at(i)==1))
+            if(has_ground_truth)
             {
-                Quaternion err_quat_madg_mag = Metrics::error_quaternion_earth(gt.at(i), enu_madg_mag);
-                Quaternion err_quat_madg_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_madg);
-                Quaternion err_quat_comp_mag = Metrics::error_quaternion_earth(gt.at(i), enu_comp_mag);
-                Quaternion err_quat_comp_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_comp);
+                // These are in ENU
+                if((!gt.at(i).isNaN()) && (mov.at(i)==1))
+                {
+                    Quaternion err_quat_madg_mag = Metrics::error_quaternion_earth(gt.at(i), enu_madg_mag);
+                    Quaternion err_quat_madg_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_madg);
+                    Quaternion err_quat_comp_mag = Metrics::error_quaternion_earth(gt.at(i), enu_comp_mag);
+                    Quaternion err_quat_comp_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_comp);
 
-                error_madg_mag << Metrics::total_error(err_quat_madg_mag) << "," << Metrics::inclination_error(err_quat_madg_mag) << "," << Metrics::heading_error(err_quat_madg_mag) << "\n";
-                error_madg_no_mag << Metrics::total_error(err_quat_madg_no_mag) << "," << Metrics::inclination_error(err_quat_madg_no_mag) << "," << Metrics::heading_error(err_quat_madg_no_mag) << "\n";
-                error_comp_mag << Metrics::total_error(err_quat_comp_mag) << "," << Metrics::inclination_error(err_quat_comp_mag) << "," << Metrics::heading_error(err_quat_comp_mag) << "\n";
-                error_comp_no_mag << Metrics::total_error(err_quat_comp_no_mag) << "," << Metrics::inclination_error(err_quat_comp_no_mag) << "," << Metrics::heading_error(err_quat_comp_no_mag) << "\n";
+                    error_madg_mag << Metrics::total_error(err_quat_madg_mag) << "," << Metrics::inclination_error(err_quat_madg_mag) << "," << Metrics::heading_error(err_quat_madg_mag) << "\n";
+                    error_madg_no_mag << Metrics::total_error(err_quat_madg_no_mag) << "," << Metrics::inclination_error(err_quat_madg_no_mag) << "," << Metrics::heading_error(err_quat_madg_no_mag) << "\n";
+                    error_comp_mag << Metrics::total_error(err_quat_comp_mag) << "," << Metrics::inclination_error(err_quat_comp_mag) << "," << Metrics::heading_error(err_quat_comp_mag) << "\n";
+                    error_comp_no_mag << Metrics::total_error(err_quat_comp_no_mag) << "," << Metrics::inclination_error(err_quat_comp_no_mag) << "," << Metrics::heading_error(err_quat_comp_no_mag) << "\n";
+                }
+                else
+                {
+                    error_madg_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+                    error_madg_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+                    error_comp_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+                    error_comp_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+                }
+                gravity_vectors_gt.push_back({gt.at(i).roll(), gt.at(i).pitch(), gt.at(i).yaw()});
             }
-            else
-            {
-                error_madg_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
-                error_madg_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
-                error_comp_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
-                error_comp_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
-            }
-
-            // float roll_diff = Metrics::euler_roll_diff(read.gt.at(i), madg_mag.q);
-            // float pitch_diff = Metrics::euler_pitch_diff(read.gt.at(i), madg_mag.q);
-            // float yaw_diff = Metrics::euler_yaw_diff(read.gt.at(i), madg_mag.q);
-            // float roll_diff = Metrics::euler_roll_diff(read.gt.at(i), enu_est);
-            // float pitch_diff = Metrics::euler_pitch_diff(read.gt.at(i), enu_est);
-            // float yaw_diff = Metrics::euler_yaw_diff(read.gt.at(i), enu_est);
 
             gravity_vectors_madg.push_back({enu_madg.roll(), enu_madg.pitch(), enu_madg.yaw()});
-            gravity_vectors_madg_mag.push_back({enu_madg_mag.roll(), enu_madg_mag.pitch(), enu_madg_mag.yaw()});
-            gravity_vectors_gt.push_back({gt.at(i).roll(), gt.at(i).pitch(), gt.at(i).yaw()});
+            gravity_vectors_madg_mag.push_back({enu_madg_mag.roll(), enu_madg_mag.pitch(), enu_madg_mag.yaw()});            
             gravity_vectors_comp.push_back({enu_comp.roll(), enu_comp.pitch(), enu_comp.yaw()});
             gravity_vectors_comp_mag.push_back({enu_comp_mag.roll(), enu_comp_mag.pitch(), enu_comp_mag.yaw()});
         }
@@ -260,18 +271,22 @@ namespace GUI
         est_comp_mag.close();
         est_comp_no_mag.close();
 
-        error_madg_mag.close();
-        error_madg_no_mag.close();
-        error_comp_mag.close();
-        error_comp_no_mag.close();
+        if(has_ground_truth)
+        {
+            error_madg_mag.close();
+            error_madg_no_mag.close();
+            error_comp_mag.close();
+            error_comp_no_mag.close();
 
-        vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(0));
-        vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(0));
+            vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(0));
+
+            rmse = CsvReader::getRMSE(fPath, results_suffix);
+        }
+
+        vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(0));        
         vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(0));
         vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(0));
-        vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(0));
-
-        rmse = CsvReader::getRMSE(fPath, results_suffix);
+        vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(0));        
 
         if(!save_to_file)
         {
@@ -397,7 +412,7 @@ namespace GUI
     
             ImGui::InputFloat(_labelPrefix("Sample frequency:").c_str(), &freq, 0.01f, 1.0f, "%.3f");
 
-            ImGui::InputFloat(_labelPrefix("Comp. filter gain:").c_str(), &comp_gain, 0.001f, 0.01f, "%.5f");
+            ImGui::InputFloat(_labelPrefix("Naive filter gain:").c_str(), &comp_gain, 0.001f, 0.01f, "%.5f");
 
             ImGui::InputFloat(_labelPrefix("Madg. filter beta:").c_str(), &madg_beta, 0.01f, 0.1f, "%.5f");
 
@@ -542,7 +557,7 @@ namespace GUI
                             vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
                             vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(vector_index));
                             vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
-                        } 
+                        }
                     }
                     ImGui::SameLine(0.0f, spacing);
                     if(ImGui::ArrowButton("##right", ImGuiDir_Right))
@@ -611,51 +626,57 @@ namespace GUI
 
                 ImGui::Text("");
                 ImGui::Text("Show estimated vector visualization windows:");
-                ImGui::Checkbox(_labelPrefix("Ground truth:").c_str(), &vtk_gt_open);
+                if(has_ground_truth)
+                {
+                    ImGui::Checkbox(_labelPrefix("Ground truth:").c_str(), &vtk_gt_open);
+                }
                 ImGui::Checkbox(_labelPrefix("Madg. filter w/ mag.:").c_str(), &vtk_madg_mag_open);
                 ImGui::Checkbox(_labelPrefix("Madg. filter:").c_str(), &vtk_madg_open);
-                ImGui::Checkbox(_labelPrefix("Comp. filter w/ mag.:").c_str(), &vtk_comp_mag_open);
-                ImGui::Checkbox(_labelPrefix("Comp. filter:").c_str(), &vtk_comp_open);
+                ImGui::Checkbox(_labelPrefix("Naive filter w/ mag.:").c_str(), &vtk_comp_mag_open);
+                ImGui::Checkbox(_labelPrefix("Naive filter:").c_str(), &vtk_comp_open);
                 ImGui::Text("");
 
-                ImGui::Text("RMSE Values (degrees): ");
-                if(ImGui::BeginTable("table1", 5))
+                if(has_ground_truth)
                 {
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("Madg. w/ mag.");
-                    ImGui::TableSetColumnIndex(2);
-                    ImGui::Text("Madg.");
-                    ImGui::TableSetColumnIndex(3);
-                    ImGui::Text("Comp. w/ mag.");
-                    ImGui::TableSetColumnIndex(4);
-                    ImGui::Text("Comp.");
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    ImGui::Text("Incl. error");
-                    for (int column = 1; column < 5; column++)
+                    ImGui::Text("RMSE Values (degrees): ");
+                    if(ImGui::BeginTable("table1", 5))
                     {
-                        ImGui::TableSetColumnIndex(column);
-                        ImGui::Text("%f", rmse.at(column-1).y*180/M_PI);
+                        ImGui::TableNextRow();
+                        ImGui::TableSetColumnIndex(1);
+                        ImGui::Text("Madg. w/ mag.");
+                        ImGui::TableSetColumnIndex(2);
+                        ImGui::Text("Madg.");
+                        ImGui::TableSetColumnIndex(3);
+                        ImGui::Text("Naive w/ mag.");
+                        ImGui::TableSetColumnIndex(4);
+                        ImGui::Text("Naive");
+                        ImGui::TableNextRow();
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::Text("Incl. error");
+                        for (int column = 1; column < 5; column++)
+                        {
+                            ImGui::TableSetColumnIndex(column);
+                            ImGui::Text("%f", rmse.at(column-1).y*180/M_PI);
+                        }
+                        ImGui::TableNextRow();
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::Text("Head. error");
+                        for (int column = 1; column < 5; column++)
+                        {
+                            ImGui::TableSetColumnIndex(column);
+                            ImGui::Text("%f", rmse.at(column-1).z*180/M_PI);
+                        }
+                        ImGui::TableNextRow();
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::Text("Total error");
+                        for (int column = 1; column < 5; column++)
+                        {
+                            ImGui::TableSetColumnIndex(column);
+                            ImGui::Text("%f", rmse.at(column-1).x*180/M_PI);
+                        }
+                        ImGui::EndTable();
                     }
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    ImGui::Text("Head. error");
-                    for (int column = 1; column < 5; column++)
-                    {
-                        ImGui::TableSetColumnIndex(column);
-                        ImGui::Text("%f", rmse.at(column-1).z*180/M_PI);
-                    }
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    ImGui::Text("Total error");
-                    for (int column = 1; column < 5; column++)
-                    {
-                        ImGui::TableSetColumnIndex(column);
-                        ImGui::Text("%f", rmse.at(column-1).x*180/M_PI);
-                    }
-                    ImGui::EndTable();
-                }
+                }                
             }
 
             ImGui::Text("\nApplication average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -679,17 +700,20 @@ namespace GUI
                 ImGui::Text("Yaw: %f", gravity_vectors_madg.at(vector_index).at(2)*180/M_PI);
                 ImGui::EndTable();
             }
-            ImGui::Text("Euler angle errors (degrees): ");
-            if(ImGui::BeginTable("table5", 3))
+            if(has_ground_truth)
             {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", (gravity_vectors_madg.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
-                ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", (gravity_vectors_madg.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
-                ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", (gravity_vectors_madg.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
-                ImGui::EndTable();
+                ImGui::Text("Euler angle errors (degrees): ");
+                if(ImGui::BeginTable("table5", 3))
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Roll: %f", (gravity_vectors_madg.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Pitch: %f", (gravity_vectors_madg.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Yaw: %f", (gravity_vectors_madg.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
+                    ImGui::EndTable();
+                }
             }
             vtk_viewer_madg.render();
             ImGui::End();
@@ -711,17 +735,20 @@ namespace GUI
                 ImGui::Text("Yaw: %f", gravity_vectors_madg_mag.at(vector_index).at(2)*180/M_PI);
                 ImGui::EndTable();
             }
-            ImGui::Text("Euler angle errors (degrees): ");
-            if(ImGui::BeginTable("table5", 3))
+            if(has_ground_truth)
             {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", (gravity_vectors_madg_mag.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
-                ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", (gravity_vectors_madg_mag.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
-                ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", (gravity_vectors_madg_mag.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
-                ImGui::EndTable();
+                ImGui::Text("Euler angle errors (degrees): ");
+                if(ImGui::BeginTable("table5", 3))
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Roll: %f", (gravity_vectors_madg_mag.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Pitch: %f", (gravity_vectors_madg_mag.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Yaw: %f", (gravity_vectors_madg_mag.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
+                    ImGui::EndTable();
+                }
             }
             vtk_viewer_madg_mag.render();
             ImGui::End();
@@ -750,7 +777,7 @@ namespace GUI
         if(vtk_comp_open && is_calculated)
         {
             ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Complementary filter estimation", &vtk_comp_open, VtkViewer::NoScrollFlags());
+            ImGui::Begin("Naive complementary filter estimation", &vtk_comp_open, VtkViewer::NoScrollFlags());
             ImGui::Text("Euler angles (degrees): ");
             if(ImGui::BeginTable("table4", 3))
             {
@@ -763,17 +790,20 @@ namespace GUI
                 ImGui::Text("Yaw: %f", gravity_vectors_comp.at(vector_index).at(2)*180/M_PI);
                 ImGui::EndTable();
             }
-            ImGui::Text("Euler angle errors (degrees): ");
-            if(ImGui::BeginTable("table6", 3))
+            if(has_ground_truth)
             {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", (gravity_vectors_comp.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
-                ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", (gravity_vectors_comp.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
-                ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", (gravity_vectors_comp.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
-                ImGui::EndTable();
+                ImGui::Text("Euler angle errors (degrees): ");
+                if(ImGui::BeginTable("table6", 3))
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Roll: %f", (gravity_vectors_comp.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Pitch: %f", (gravity_vectors_comp.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Yaw: %f", (gravity_vectors_comp.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
+                    ImGui::EndTable();
+                }
             }
             vtk_viewer_comp.render();
             ImGui::End();
@@ -782,7 +812,7 @@ namespace GUI
         if(vtk_comp_mag_open && is_calculated)
         {
             ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Complementary filter w/ mag. estimation", &vtk_comp_mag_open, VtkViewer::NoScrollFlags());
+            ImGui::Begin("Naive complementary filter w/ mag. estimation", &vtk_comp_mag_open, VtkViewer::NoScrollFlags());
             ImGui::Text("Euler angles (degrees): ");
             if(ImGui::BeginTable("table4", 3))
             {
@@ -795,17 +825,20 @@ namespace GUI
                 ImGui::Text("Yaw: %f", gravity_vectors_comp_mag.at(vector_index).at(2)*180/M_PI);
                 ImGui::EndTable();
             }
-            ImGui::Text("Euler angle errors (degrees): ");
-            if(ImGui::BeginTable("table6", 3))
+            if(has_ground_truth)
             {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", (gravity_vectors_comp_mag.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
-                ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", (gravity_vectors_comp_mag.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
-                ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", (gravity_vectors_comp_mag.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
-                ImGui::EndTable();
+                ImGui::Text("Euler angle errors (degrees): ");
+                if(ImGui::BeginTable("table6", 3))
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Roll: %f", (gravity_vectors_comp_mag.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Pitch: %f", (gravity_vectors_comp_mag.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("Yaw: %f", (gravity_vectors_comp_mag.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
+                    ImGui::EndTable();
+                }
             }
             vtk_viewer_comp_mag.render();
             ImGui::End();
