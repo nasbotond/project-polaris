@@ -74,6 +74,7 @@ namespace GUI
     static bool max_index = true;
     static bool save_to_file = false;
     static bool has_ground_truth = false;
+    static bool has_mag = false;
 
     // static bool show_style_editor = false;
     // static bool show_demo_window = false;
@@ -117,6 +118,7 @@ namespace GUI
         float deltat = 1.0f/(float)freq;
 
         has_ground_truth = std::filesystem::exists(fPath + "opt_quat.csv");
+        has_mag = std::filesystem::exists(fPath + "imu_mag.csv");
 
         // Input
         NaiveFilter naive = NaiveFilter(deltat, naive_gain);
@@ -136,9 +138,25 @@ namespace GUI
 
         std::vector<Vec3> a = CsvReader::getVec3Data(fPath + "imu_acc.csv");
         std::vector<Vec3> w = CsvReader::getVec3Data(fPath + "imu_gyr.csv");
-        std::vector<Vec3> m = CsvReader::getVec3Data(fPath + "imu_mag.csv");
+        std::vector<Vec3> m;
         std::vector<int> mov;
         std::vector<Quaternion> gt;
+
+        if(has_mag)
+        {
+            m = CsvReader::getVec3Data(fPath + "imu_mag.csv");
+        }
+        else
+        {
+            vtk_naive_mag_open = false;
+            vtk_naive_open = true;
+            vtk_madg_mag_open = false;
+            vtk_madg_open = true;
+            for(int i = 0; i < a.size(); ++i)
+            {
+                m.push_back(Vec3(0,0,0));
+            }
+        }
 
         if(max_index)
         {
@@ -149,11 +167,11 @@ namespace GUI
         if(start_index < 1)
         {
             start_index = 0;
-            initial_state = Quaternion::getOrientationFromAccMag(a.at(0), m.at(0));        
+            initial_state = has_mag ? Quaternion::getOrientationFromAccMag(a.at(0), m.at(0)) : Quaternion::getOrientationFromAcc(a.at(0));        
         }
         else
         {
-            initial_state = Quaternion::getOrientationFromAccMag(a.at(start_index-1), m.at(start_index-1));
+            initial_state = has_mag ? Quaternion::getOrientationFromAccMag(a.at(start_index-1), m.at(start_index-1)) : Quaternion::getOrientationFromAcc(a.at(start_index-1));
         }
 
         std::string results_suffix = "_" +std::to_string(freq) + "_" + std::to_string(naive_gain) + "_" + std::to_string(madg_beta) + "_" + std::to_string(start_index) + "_" + std::to_string(end_index);
@@ -630,9 +648,15 @@ namespace GUI
                 {
                     ImGui::Checkbox(_labelPrefix("Ground truth:").c_str(), &vtk_gt_open);
                 }
-                ImGui::Checkbox(_labelPrefix("Madg. filter w/ mag.:").c_str(), &vtk_madg_mag_open);
+                if(has_mag)
+                {
+                    ImGui::Checkbox(_labelPrefix("Madg. filter w/ mag.:").c_str(), &vtk_madg_mag_open);
+                }
                 ImGui::Checkbox(_labelPrefix("Madg. filter:").c_str(), &vtk_madg_open);
-                ImGui::Checkbox(_labelPrefix("Naive filter w/ mag.:").c_str(), &vtk_naive_mag_open);
+                if(has_mag)
+                {
+                    ImGui::Checkbox(_labelPrefix("Naive filter w/ mag.:").c_str(), &vtk_naive_mag_open);
+                }
                 ImGui::Checkbox(_labelPrefix("Naive filter:").c_str(), &vtk_naive_open);
                 ImGui::Text("");
 

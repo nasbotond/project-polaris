@@ -130,4 +130,29 @@ class Quaternion
 
             return result;
         }
+        
+        static Quaternion getOrientationFromAcc(Vec3 a)
+        {
+            Quaternion q_a = Quaternion(1.0, 0, 0, 0);
+
+            Vec3 acc = a;
+            if((acc.x*acc.x + acc.y*acc.y + acc.z*acc.z) > 0)
+            {
+                acc.norm();
+
+                float theta = atan2(acc.y, acc.z); // roll
+                float phi = atan2(-acc.x, sqrt((acc.y*acc.y + acc.z*acc.z))); // pitch
+                
+                float psi = 0; // yaw
+
+                q_a.q_1 = cos(0.5*theta)*cos(0.5*phi);
+                q_a.q_2 = sin(0.5*theta)*cos(0.5*phi);
+                q_a.q_3 = cos(0.5*theta)*sin(0.5*phi);
+                q_a.q_4 = -sin(0.5*theta)*sin(0.5*phi);
+
+                q_a.norm();
+            }
+
+            return q_a;
+        }
 };
