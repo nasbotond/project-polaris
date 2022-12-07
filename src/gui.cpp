@@ -14,35 +14,35 @@ namespace GUI
     // Init vtkViewers
     VtkViewer vtk_viewer_madg_mag;
     VtkViewer vtk_viewer_gt;
-    VtkViewer vtk_viewer_comp_mag;
+    VtkViewer vtk_viewer_naive_mag;
     VtkViewer vtk_viewer_madg;
-    VtkViewer vtk_viewer_comp;
+    VtkViewer vtk_viewer_naive;
 
     std::vector<std::vector<double>> gravity_vectors_madg_mag;
     std::vector<std::vector<double>> gravity_vectors_madg;
     std::vector<std::vector<double>> gravity_vectors_gt;
-    std::vector<std::vector<double>> gravity_vectors_comp_mag;
-    std::vector<std::vector<double>> gravity_vectors_comp;
+    std::vector<std::vector<double>> gravity_vectors_naive_mag;
+    std::vector<std::vector<double>> gravity_vectors_naive;
 
     vtkSmartPointer<vtkActor> arrowActor_madg;
     vtkSmartPointer<vtkActor> planeActor_madg;
 
-    vtkSmartPointer<vtkActor> arrowActor_comp;
-    vtkSmartPointer<vtkActor> planeActor_comp;
+    vtkSmartPointer<vtkActor> arrowActor_naive;
+    vtkSmartPointer<vtkActor> planeActor_naive;
 
     vtkSmartPointer<vtkActor> arrowActor_madg_mag;
     vtkSmartPointer<vtkActor> planeActor_madg_mag;
 
-    vtkSmartPointer<vtkActor> arrowActor_comp_mag;
-    vtkSmartPointer<vtkActor> planeActor_comp_mag;
+    vtkSmartPointer<vtkActor> arrowActor_naive_mag;
+    vtkSmartPointer<vtkActor> planeActor_naive_mag;
 
     vtkSmartPointer<vtkActor> arrowActor_gt;
     vtkSmartPointer<vtkActor> planeActor_gt;
 
     vtkSmartPointer<vtkActorCollection> actors_madg;
-    vtkSmartPointer<vtkActorCollection> actors_comp;
+    vtkSmartPointer<vtkActorCollection> actors_naive;
     vtkSmartPointer<vtkActorCollection> actors_madg_mag;
-    vtkSmartPointer<vtkActorCollection> actors_comp_mag;
+    vtkSmartPointer<vtkActorCollection> actors_naive_mag;
     vtkSmartPointer<vtkActorCollection> actors_gt;
 
     vtkNew<vtkNamedColors> colors;
@@ -53,7 +53,7 @@ namespace GUI
     static bool loop = false;
     static bool black_background = false;
 
-    static float comp_gain = 0.003f;
+    static float naive_gain = 0.003f;
     static float madg_beta = 0.18f;
     static float madg_zeta = 0.0001f;
     static float freq = 286.0;
@@ -62,9 +62,9 @@ namespace GUI
 
     static bool vtk_madg_open = false;
     static bool vtk_gt_open = true;
-    static bool vtk_comp_open = false;
+    static bool vtk_naive_open = false;
     static bool vtk_madg_mag_open = true;
-    static bool vtk_comp_mag_open = true;
+    static bool vtk_naive_mag_open = true;
 
     static bool is_playing = false;
     static bool is_manual_playback = true;
@@ -119,20 +119,20 @@ namespace GUI
         has_ground_truth = std::filesystem::exists(fPath + "opt_quat.csv");
 
         // Input
-        ComplementaryFilter comp = ComplementaryFilter(deltat, comp_gain);
-        ComplementaryFilter comp_mag = ComplementaryFilter(deltat, comp_gain);
+        NaiveFilter naive = NaiveFilter(deltat, naive_gain);
+        NaiveFilter naive_mag = NaiveFilter(deltat, naive_gain);
         MadgwickFilter madg = MadgwickFilter(deltat, madg_beta, madg_zeta);
         MadgwickFilter madg_mag = MadgwickFilter(deltat, madg_beta, madg_zeta);
 
         std::ofstream est_madg_mag;
         std::ofstream est_madg_no_mag;
-        std::ofstream est_comp_mag;
-        std::ofstream est_comp_no_mag;
+        std::ofstream est_naive_mag;
+        std::ofstream est_naive_no_mag;
 
         std::ofstream error_madg_mag;
         std::ofstream error_madg_no_mag;
-        std::ofstream error_comp_mag;
-        std::ofstream error_comp_no_mag;
+        std::ofstream error_naive_mag;
+        std::ofstream error_naive_no_mag;
 
         std::vector<Vec3> a = CsvReader::getVec3Data(fPath + "imu_acc.csv");
         std::vector<Vec3> w = CsvReader::getVec3Data(fPath + "imu_gyr.csv");
@@ -156,7 +156,7 @@ namespace GUI
             initial_state = Quaternion::getOrientationFromAccMag(a.at(start_index-1), m.at(start_index-1));
         }
 
-        std::string results_suffix = "_" +std::to_string(freq) + "_" + std::to_string(comp_gain) + "_" + std::to_string(madg_beta) + "_" + std::to_string(start_index) + "_" + std::to_string(end_index);
+        std::string results_suffix = "_" +std::to_string(freq) + "_" + std::to_string(naive_gain) + "_" + std::to_string(madg_beta) + "_" + std::to_string(start_index) + "_" + std::to_string(end_index);
 
         std::string str = fPath.substr(0, fPath.length()-2);
         char ch = '/';
@@ -175,8 +175,8 @@ namespace GUI
 
         est_madg_mag.open(fPath + results_suffix + "/est_madg_mag.csv");
         est_madg_no_mag.open(fPath + results_suffix + "/est_madg_no_mag.csv");
-        est_comp_mag.open(fPath + results_suffix + "/est_comp_mag.csv");
-        est_comp_no_mag.open(fPath + results_suffix + "/est_comp_no_mag.csv");
+        est_naive_mag.open(fPath + results_suffix + "/est_naive_mag.csv");
+        est_naive_no_mag.open(fPath + results_suffix + "/est_naive_no_mag.csv");
 
         if(has_ground_truth)
         {
@@ -184,8 +184,8 @@ namespace GUI
             mov = CsvReader::get1DData(fPath + "movement.csv");
             error_madg_mag.open(fPath + results_suffix + "/error_madg_mag.csv");
             error_madg_no_mag.open(fPath + results_suffix + "/error_madg_no_mag.csv");
-            error_comp_mag.open(fPath + results_suffix + "/error_comp_mag.csv");
-            error_comp_no_mag.open(fPath + results_suffix + "/error_comp_no_mag.csv");
+            error_naive_mag.open(fPath + results_suffix + "/error_naive_mag.csv");
+            error_naive_no_mag.open(fPath + results_suffix + "/error_naive_no_mag.csv");
         }
         else
         {
@@ -199,20 +199,20 @@ namespace GUI
             }
         }
 
-        comp_mag.setInitialState(initial_state);
+        naive_mag.setInitialState(initial_state);
         madg_mag.setInitialState(initial_state);
-        comp.setInitialState(initial_state);
+        naive.setInitialState(initial_state);
         madg.setInitialState(initial_state);
 
         Quaternion enu_madg_mag;
         Quaternion enu_madg;
-        Quaternion enu_comp_mag;
-        Quaternion enu_comp;
+        Quaternion enu_naive_mag;
+        Quaternion enu_naive;
 
         for (int i = start_index; i < end_index; ++i)
         {
-            comp_mag.updateFilter(w.at(i), a.at(i), m.at(i));
-            comp.updateFilter(w.at(i), a.at(i));
+            naive_mag.updateFilter(w.at(i), a.at(i), m.at(i));
+            naive.updateFilter(w.at(i), a.at(i));
 
             madg_mag.updateMARGFilter(w.at(i), a.at(i), m.at(i));        
             madg.updateIMUFilter(w.at(i), a.at(i));
@@ -220,20 +220,20 @@ namespace GUI
             // Convert to ENU from NED
             enu_madg_mag = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), madg_mag.q);
             enu_madg = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), madg.q);
-            enu_comp_mag = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), comp_mag.q);
-            enu_comp = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), comp.q);
+            enu_naive_mag = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), naive_mag.q);
+            enu_naive = Metrics::hamiltonProduct(Quaternion(1.0/sqrt(2), 0.0, 0.0, 1.0/sqrt(2)), naive.q);
 
             // est_madg_mag << madg_mag.q.q_1 << "," << madg_mag.q.q_2 << "," << madg_mag.q.q_3 << "," << madg_mag.q.q_4 << "\n";
-            // est_comp_mag << comp_mag.q.q_1 << "," << comp_mag.q.q_2 << "," << comp_mag.q.q_3 << "," << comp_mag.q.q_4 << "\n";
+            // est_naive_mag << naive_mag.q.q_1 << "," << naive_mag.q.q_2 << "," << naive_mag.q.q_3 << "," << naive_mag.q.q_4 << "\n";
 
             // est_madg_no_mag << madg.q.q_1 << "," << madg.q.q_2 << "," << madg.q.q_3 << "," << madg.q.q_4 << "\n";
-            // est_comp_no_mag << comp.q.q_1 << "," << comp.q.q_2 << "," << comp.q.q_3 << "," << comp.q.q_4 << "\n";
+            // est_naive_no_mag << comp.q.q_1 << "," << comp.q.q_2 << "," << comp.q.q_3 << "," << comp.q.q_4 << "\n";
 
             est_madg_mag << enu_madg_mag.q_1 << "," << enu_madg_mag.q_2 << "," << enu_madg_mag.q_3 << "," << enu_madg_mag.q_4 << "\n";
-            est_comp_mag << enu_comp_mag.q_1 << "," << enu_comp_mag.q_2 << "," << enu_comp_mag.q_3 << "," << enu_comp_mag.q_4 << "\n";
+            est_naive_mag << enu_naive_mag.q_1 << "," << enu_naive_mag.q_2 << "," << enu_naive_mag.q_3 << "," << enu_naive_mag.q_4 << "\n";
 
             est_madg_no_mag << enu_madg.q_1 << "," << enu_madg.q_2 << "," << enu_madg.q_3 << "," << enu_madg.q_4 << "\n";
-            est_comp_no_mag << enu_comp.q_1 << "," << enu_comp.q_2 << "," << enu_comp.q_3 << "," << enu_comp.q_4 << "\n";
+            est_naive_no_mag << enu_naive.q_1 << "," << enu_naive.q_2 << "," << enu_naive.q_3 << "," << enu_naive.q_4 << "\n";
 
             if(has_ground_truth)
             {
@@ -242,41 +242,41 @@ namespace GUI
                 {
                     Quaternion err_quat_madg_mag = Metrics::error_quaternion_earth(gt.at(i), enu_madg_mag);
                     Quaternion err_quat_madg_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_madg);
-                    Quaternion err_quat_comp_mag = Metrics::error_quaternion_earth(gt.at(i), enu_comp_mag);
-                    Quaternion err_quat_comp_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_comp);
+                    Quaternion err_quat_naive_mag = Metrics::error_quaternion_earth(gt.at(i), enu_naive_mag);
+                    Quaternion err_quat_naive_no_mag = Metrics::error_quaternion_earth(gt.at(i), enu_naive);
 
                     error_madg_mag << Metrics::total_error(err_quat_madg_mag) << "," << Metrics::inclination_error(err_quat_madg_mag) << "," << Metrics::heading_error(err_quat_madg_mag) << "\n";
                     error_madg_no_mag << Metrics::total_error(err_quat_madg_no_mag) << "," << Metrics::inclination_error(err_quat_madg_no_mag) << "," << Metrics::heading_error(err_quat_madg_no_mag) << "\n";
-                    error_comp_mag << Metrics::total_error(err_quat_comp_mag) << "," << Metrics::inclination_error(err_quat_comp_mag) << "," << Metrics::heading_error(err_quat_comp_mag) << "\n";
-                    error_comp_no_mag << Metrics::total_error(err_quat_comp_no_mag) << "," << Metrics::inclination_error(err_quat_comp_no_mag) << "," << Metrics::heading_error(err_quat_comp_no_mag) << "\n";
+                    error_naive_mag << Metrics::total_error(err_quat_naive_mag) << "," << Metrics::inclination_error(err_quat_naive_mag) << "," << Metrics::heading_error(err_quat_naive_mag) << "\n";
+                    error_naive_no_mag << Metrics::total_error(err_quat_naive_no_mag) << "," << Metrics::inclination_error(err_quat_naive_no_mag) << "," << Metrics::heading_error(err_quat_naive_no_mag) << "\n";
                 }
                 else
                 {
                     error_madg_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
                     error_madg_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
-                    error_comp_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
-                    error_comp_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+                    error_naive_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
+                    error_naive_no_mag << 9999 << "," << 9999 << "," << 9999 << "\n";
                 }
                 gravity_vectors_gt.push_back({gt.at(i).roll(), gt.at(i).pitch(), gt.at(i).yaw()});
             }
 
             gravity_vectors_madg.push_back({enu_madg.roll(), enu_madg.pitch(), enu_madg.yaw()});
             gravity_vectors_madg_mag.push_back({enu_madg_mag.roll(), enu_madg_mag.pitch(), enu_madg_mag.yaw()});            
-            gravity_vectors_comp.push_back({enu_comp.roll(), enu_comp.pitch(), enu_comp.yaw()});
-            gravity_vectors_comp_mag.push_back({enu_comp_mag.roll(), enu_comp_mag.pitch(), enu_comp_mag.yaw()});
+            gravity_vectors_naive.push_back({enu_naive.roll(), enu_naive.pitch(), enu_naive.yaw()});
+            gravity_vectors_naive_mag.push_back({enu_naive_mag.roll(), enu_naive_mag.pitch(), enu_naive_mag.yaw()});
         }
 
         est_madg_mag.close();
         est_madg_no_mag.close();
-        est_comp_mag.close();
-        est_comp_no_mag.close();
+        est_naive_mag.close();
+        est_naive_no_mag.close();
 
         if(has_ground_truth)
         {
             error_madg_mag.close();
             error_madg_no_mag.close();
-            error_comp_mag.close();
-            error_comp_no_mag.close();
+            error_naive_mag.close();
+            error_naive_no_mag.close();
 
             vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(0));
 
@@ -284,9 +284,9 @@ namespace GUI
         }
 
         vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(0));        
-        vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(0));
+        vtk_viewer_naive.updateActors(actors_naive, gravity_vectors_naive.at(0));
         vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(0));
-        vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(0));        
+        vtk_viewer_naive_mag.updateActors(actors_naive_mag, gravity_vectors_naive_mag.at(0));        
 
         if(!save_to_file)
         {
@@ -309,22 +309,22 @@ namespace GUI
         arrowActor_madg = getArrowActor({0, 0, 0});
         planeActor_madg = getPlaneActor({0, 0, 0});
 
-        arrowActor_comp = getArrowActor({0, 0, 0});
-        planeActor_comp = getPlaneActor({0, 0, 0});
+        arrowActor_naive = getArrowActor({0, 0, 0});
+        planeActor_naive = getPlaneActor({0, 0, 0});
 
         arrowActor_madg_mag = getArrowActor({0, 0, 0});
         planeActor_madg_mag = getPlaneActor({0, 0, 0});
 
-        arrowActor_comp_mag = getArrowActor({0, 0, 0});
-        planeActor_comp_mag = getPlaneActor({0, 0, 0});
+        arrowActor_naive_mag = getArrowActor({0, 0, 0});
+        planeActor_naive_mag = getPlaneActor({0, 0, 0});
 
         arrowActor_gt = getArrowActor({0, 0, 0});
         planeActor_gt = getPlaneActor({0, 0, 0});
 
         actors_madg = vtkSmartPointer<vtkActorCollection>::New();
-        actors_comp = vtkSmartPointer<vtkActorCollection>::New();
+        actors_naive = vtkSmartPointer<vtkActorCollection>::New();
         actors_madg_mag = vtkSmartPointer<vtkActorCollection>::New();
-        actors_comp_mag = vtkSmartPointer<vtkActorCollection>::New();
+        actors_naive_mag = vtkSmartPointer<vtkActorCollection>::New();
         actors_gt = vtkSmartPointer<vtkActorCollection>::New();
 
         actors_madg->AddItem(arrowActor_madg);
@@ -333,14 +333,14 @@ namespace GUI
         actors_gt->AddItem(arrowActor_gt);
         actors_gt->AddItem(planeActor_gt);
 
-        actors_comp->AddItem(arrowActor_comp);
-        actors_comp->AddItem(planeActor_comp);
+        actors_naive->AddItem(arrowActor_naive);
+        actors_naive->AddItem(planeActor_naive);
 
         actors_madg_mag->AddItem(arrowActor_madg_mag);
         actors_madg_mag->AddItem(planeActor_madg_mag);
 
-        actors_comp_mag->AddItem(arrowActor_comp_mag);
-        actors_comp_mag->AddItem(planeActor_comp_mag);
+        actors_naive_mag->AddItem(arrowActor_naive_mag);
+        actors_naive_mag->AddItem(planeActor_naive_mag);
 
         // AXES
         auto transformA = vtkSmartPointer<vtkTransform>::New();
@@ -356,9 +356,9 @@ namespace GUI
         vtk_viewer_madg.addActors(actors_madg);
         vtk_viewer_madg.addActor(axes);
 
-        vtk_viewer_comp.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-        vtk_viewer_comp.addActors(actors_comp);
-        vtk_viewer_comp.addActor(axes);
+        vtk_viewer_naive.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
+        vtk_viewer_naive.addActors(actors_naive);
+        vtk_viewer_naive.addActor(axes);
 
         vtk_viewer_gt.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
         vtk_viewer_gt.addActors(actors_gt);
@@ -368,9 +368,9 @@ namespace GUI
         vtk_viewer_madg_mag.addActors(actors_madg_mag);
         vtk_viewer_madg_mag.addActor(axes);
 
-        vtk_viewer_comp_mag.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
-        vtk_viewer_comp_mag.addActors(actors_comp_mag);
-        vtk_viewer_comp_mag.addActor(axes);
+        vtk_viewer_naive_mag.getRenderer()->SetBackground(colors->GetColor3d("BkgColor").GetData());
+        vtk_viewer_naive_mag.addActors(actors_naive_mag);
+        vtk_viewer_naive_mag.addActor(axes);
     }
 
     void generateUI()
@@ -412,7 +412,7 @@ namespace GUI
     
             ImGui::InputFloat(_labelPrefix("Sample frequency:").c_str(), &freq, 0.01f, 1.0f, "%.3f");
 
-            ImGui::InputFloat(_labelPrefix("Naive filter gain:").c_str(), &comp_gain, 0.001f, 0.01f, "%.5f");
+            ImGui::InputFloat(_labelPrefix("Naive filter gain:").c_str(), &naive_gain, 0.001f, 0.01f, "%.5f");
 
             ImGui::InputFloat(_labelPrefix("Madg. filter beta:").c_str(), &madg_beta, 0.01f, 0.1f, "%.5f");
 
@@ -435,8 +435,8 @@ namespace GUI
                     gravity_vectors_madg.clear();
                     gravity_vectors_madg_mag.clear();
                     gravity_vectors_gt.clear();
-                    gravity_vectors_comp.clear();
-                    gravity_vectors_comp_mag.clear();
+                    gravity_vectors_naive.clear();
+                    gravity_vectors_naive_mag.clear();
 
                     if(min_index)
                     {
@@ -490,10 +490,10 @@ namespace GUI
                 }
 
                 auto renderer_madg = vtk_viewer_madg.getRenderer();                
-                auto renderer_comp = vtk_viewer_comp.getRenderer();
+                auto renderer_naive = vtk_viewer_naive.getRenderer();
                 auto renderer_gt = vtk_viewer_gt.getRenderer();
                 auto renderer_madg_mag = vtk_viewer_madg_mag.getRenderer();                
-                auto renderer_comp_mag = vtk_viewer_comp_mag.getRenderer();
+                auto renderer_naive_mag = vtk_viewer_naive_mag.getRenderer();
 
                 ImGui::Checkbox(_labelPrefix("Black background:").c_str(), &black_background);
                 if(black_background)
@@ -501,27 +501,27 @@ namespace GUI
                     // Set background to black
                     renderer_madg->SetBackground(0, 0, 0);
                     renderer_gt->SetBackground(0, 0, 0);
-                    renderer_comp->SetBackground(0, 0, 0);
+                    renderer_naive->SetBackground(0, 0, 0);
                     renderer_madg_mag->SetBackground(0, 0, 0);
-                    renderer_comp_mag->SetBackground(0, 0, 0);
+                    renderer_naive_mag->SetBackground(0, 0, 0);
                 }
 
                 if(!black_background)
                 {
                     renderer_madg->SetBackground(colors->GetColor3d("BkgColor").GetData());
                     renderer_gt->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                    renderer_comp->SetBackground(colors->GetColor3d("BkgColor").GetData());
+                    renderer_naive->SetBackground(colors->GetColor3d("BkgColor").GetData());
                     renderer_madg_mag->SetBackground(colors->GetColor3d("BkgColor").GetData());
-                    renderer_comp_mag->SetBackground(colors->GetColor3d("BkgColor").GetData());
+                    renderer_naive_mag->SetBackground(colors->GetColor3d("BkgColor").GetData());
                 }
             
                 static float vtk2BkgAlpha = 0.2f;
                 ImGui::SliderFloat(_labelPrefix("Background alpha:").c_str(), &vtk2BkgAlpha, 0.0f, 1.0f);
                 renderer_madg->SetBackgroundAlpha(vtk2BkgAlpha);
                 renderer_gt->SetBackgroundAlpha(vtk2BkgAlpha);
-                renderer_comp->SetBackgroundAlpha(vtk2BkgAlpha);
+                renderer_naive->SetBackgroundAlpha(vtk2BkgAlpha);
                 renderer_madg_mag->SetBackgroundAlpha(vtk2BkgAlpha);
-                renderer_comp_mag->SetBackgroundAlpha(vtk2BkgAlpha);
+                renderer_naive_mag->SetBackgroundAlpha(vtk2BkgAlpha);
 
                 if(is_manual_playback)
                 {
@@ -529,9 +529,9 @@ namespace GUI
                     {
                         vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
                         vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
-                        vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
+                        vtk_viewer_naive.updateActors(actors_naive, gravity_vectors_naive.at(vector_index));
                         vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(vector_index));
-                        vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
+                        vtk_viewer_naive_mag.updateActors(actors_naive_mag, gravity_vectors_naive_mag.at(vector_index));
                     }
 
                     ImGui::Text("");
@@ -545,18 +545,18 @@ namespace GUI
                             vector_index = gravity_vectors_madg.size()-1;
                             vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
                             vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
-                            vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
+                            vtk_viewer_naive.updateActors(actors_naive, gravity_vectors_naive.at(vector_index));
                             vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(vector_index));
-                            vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
+                            vtk_viewer_naive_mag.updateActors(actors_naive_mag, gravity_vectors_naive_mag.at(vector_index));
                         }
                         else
                         {
                             vector_index--;
                             vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
                             vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
-                            vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
+                            vtk_viewer_naive.updateActors(actors_naive, gravity_vectors_naive.at(vector_index));
                             vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(vector_index));
-                            vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
+                            vtk_viewer_naive_mag.updateActors(actors_naive_mag, gravity_vectors_naive_mag.at(vector_index));
                         }
                     }
                     ImGui::SameLine(0.0f, spacing);
@@ -567,18 +567,18 @@ namespace GUI
                             vector_index = 0;
                             vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
                             vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
-                            vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
+                            vtk_viewer_naive.updateActors(actors_naive, gravity_vectors_naive.at(vector_index));
                             vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(vector_index));
-                            vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
+                            vtk_viewer_naive_mag.updateActors(actors_naive_mag, gravity_vectors_naive_mag.at(vector_index));
                         }
                         else
                         {
                             vector_index++;
                             vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
                             vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
-                            vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
+                            vtk_viewer_naive.updateActors(actors_naive, gravity_vectors_naive.at(vector_index));
                             vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(vector_index));
-                            vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
+                            vtk_viewer_naive_mag.updateActors(actors_naive_mag, gravity_vectors_naive_mag.at(vector_index));
                         }
                     }
                     ImGui::PopButtonRepeat();
@@ -612,16 +612,16 @@ namespace GUI
                         vector_index = 0;
                         vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
                         vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
-                        vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
+                        vtk_viewer_naive.updateActors(actors_naive, gravity_vectors_naive.at(vector_index));
                         vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(vector_index));
-                        vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
+                        vtk_viewer_naive_mag.updateActors(actors_naive_mag, gravity_vectors_naive_mag.at(vector_index));
                     }
                     vector_index++;
                     vtk_viewer_madg.updateActors(actors_madg, gravity_vectors_madg.at(vector_index));
                     vtk_viewer_gt.updateActors(actors_gt, gravity_vectors_gt.at(vector_index));
-                    vtk_viewer_comp.updateActors(actors_comp, gravity_vectors_comp.at(vector_index));
+                    vtk_viewer_naive.updateActors(actors_naive, gravity_vectors_naive.at(vector_index));
                     vtk_viewer_madg_mag.updateActors(actors_madg_mag, gravity_vectors_madg_mag.at(vector_index));
-                    vtk_viewer_comp_mag.updateActors(actors_comp_mag, gravity_vectors_comp_mag.at(vector_index));
+                    vtk_viewer_naive_mag.updateActors(actors_naive_mag, gravity_vectors_naive_mag.at(vector_index));
                 }
 
                 ImGui::Text("");
@@ -632,8 +632,8 @@ namespace GUI
                 }
                 ImGui::Checkbox(_labelPrefix("Madg. filter w/ mag.:").c_str(), &vtk_madg_mag_open);
                 ImGui::Checkbox(_labelPrefix("Madg. filter:").c_str(), &vtk_madg_open);
-                ImGui::Checkbox(_labelPrefix("Naive filter w/ mag.:").c_str(), &vtk_comp_mag_open);
-                ImGui::Checkbox(_labelPrefix("Naive filter:").c_str(), &vtk_comp_open);
+                ImGui::Checkbox(_labelPrefix("Naive filter w/ mag.:").c_str(), &vtk_naive_mag_open);
+                ImGui::Checkbox(_labelPrefix("Naive filter:").c_str(), &vtk_naive_open);
                 ImGui::Text("");
 
                 if(has_ground_truth)
@@ -774,20 +774,20 @@ namespace GUI
             ImGui::End();
         }
 
-        if(vtk_comp_open && is_calculated)
+        if(vtk_naive_open && is_calculated)
         {
             ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Naive complementary filter estimation", &vtk_comp_open, VtkViewer::NoScrollFlags());
+            ImGui::Begin("Naive complementary filter estimation", &vtk_naive_open, VtkViewer::NoScrollFlags());
             ImGui::Text("Euler angles (degrees): ");
             if(ImGui::BeginTable("table4", 3))
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", gravity_vectors_comp.at(vector_index).at(0)*180/M_PI);
+                ImGui::Text("Roll: %f", gravity_vectors_naive.at(vector_index).at(0)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", gravity_vectors_comp.at(vector_index).at(1)*180/M_PI);
+                ImGui::Text("Pitch: %f", gravity_vectors_naive.at(vector_index).at(1)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", gravity_vectors_comp.at(vector_index).at(2)*180/M_PI);
+                ImGui::Text("Yaw: %f", gravity_vectors_naive.at(vector_index).at(2)*180/M_PI);
                 ImGui::EndTable();
             }
             if(has_ground_truth)
@@ -797,32 +797,32 @@ namespace GUI
                 {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::Text("Roll: %f", (gravity_vectors_comp.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
+                    ImGui::Text("Roll: %f", (gravity_vectors_naive.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
                     ImGui::TableNextColumn();
-                    ImGui::Text("Pitch: %f", (gravity_vectors_comp.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
+                    ImGui::Text("Pitch: %f", (gravity_vectors_naive.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
                     ImGui::TableNextColumn();
-                    ImGui::Text("Yaw: %f", (gravity_vectors_comp.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
+                    ImGui::Text("Yaw: %f", (gravity_vectors_naive.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
                     ImGui::EndTable();
                 }
             }
-            vtk_viewer_comp.render();
+            vtk_viewer_naive.render();
             ImGui::End();
         }
 
-        if(vtk_comp_mag_open && is_calculated)
+        if(vtk_naive_mag_open && is_calculated)
         {
             ImGui::SetNextWindowSize(ImVec2(720, 480), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Naive complementary filter w/ mag. estimation", &vtk_comp_mag_open, VtkViewer::NoScrollFlags());
+            ImGui::Begin("Naive complementary filter w/ mag. estimation", &vtk_naive_mag_open, VtkViewer::NoScrollFlags());
             ImGui::Text("Euler angles (degrees): ");
             if(ImGui::BeginTable("table4", 3))
             {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("Roll: %f", gravity_vectors_comp_mag.at(vector_index).at(0)*180/M_PI);
+                ImGui::Text("Roll: %f", gravity_vectors_naive_mag.at(vector_index).at(0)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Pitch: %f", gravity_vectors_comp_mag.at(vector_index).at(1)*180/M_PI);
+                ImGui::Text("Pitch: %f", gravity_vectors_naive_mag.at(vector_index).at(1)*180/M_PI);
                 ImGui::TableNextColumn();
-                ImGui::Text("Yaw: %f", gravity_vectors_comp_mag.at(vector_index).at(2)*180/M_PI);
+                ImGui::Text("Yaw: %f", gravity_vectors_naive_mag.at(vector_index).at(2)*180/M_PI);
                 ImGui::EndTable();
             }
             if(has_ground_truth)
@@ -832,15 +832,15 @@ namespace GUI
                 {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::Text("Roll: %f", (gravity_vectors_comp_mag.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
+                    ImGui::Text("Roll: %f", (gravity_vectors_naive_mag.at(vector_index).at(0)-gravity_vectors_gt.at(vector_index).at(0))*180/M_PI);
                     ImGui::TableNextColumn();
-                    ImGui::Text("Pitch: %f", (gravity_vectors_comp_mag.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
+                    ImGui::Text("Pitch: %f", (gravity_vectors_naive_mag.at(vector_index).at(1)-gravity_vectors_gt.at(vector_index).at(1))*180/M_PI);
                     ImGui::TableNextColumn();
-                    ImGui::Text("Yaw: %f", (gravity_vectors_comp_mag.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
+                    ImGui::Text("Yaw: %f", (gravity_vectors_naive_mag.at(vector_index).at(2)-gravity_vectors_gt.at(vector_index).at(2))*180/M_PI);
                     ImGui::EndTable();
                 }
             }
-            vtk_viewer_comp_mag.render();
+            vtk_viewer_naive_mag.render();
             ImGui::End();
         }
     }

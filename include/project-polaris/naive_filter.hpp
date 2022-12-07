@@ -12,19 +12,14 @@
 #include <algorithm>
 #include "quaternion.hpp"
 #include "vec3.hpp"
-#define PI 3.14159265
 
-// #define deltat 0.0035f //0.0035f
-#define gyroMeasError 3.14159265358979 * (5.0/180.0)
-// #define gain 0.02 //sqrt(3.0/4.0) * gyroMeasError
-
-class ComplementaryFilter
+class NaiveFilter
 {
     private:
 
     public:
-        ComplementaryFilter(float deltat, float gain) : deltat(deltat), gain(gain), q(Quaternion(1.0, 0, 0, 0)) {}
-        ~ComplementaryFilter() {}
+        NaiveFilter(float deltat, float gain) : deltat(deltat), gain(gain), q(Quaternion(1.0, 0, 0, 0)) {}
+        ~NaiveFilter() {}
 
         // Main functions
         void updateFilter(const Vec3 w, const Vec3 a, const Vec3 m);

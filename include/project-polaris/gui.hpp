@@ -15,7 +15,7 @@
 #include <vtkAxesActor.h>
 
 #include "madgwick_filter.hpp"
-#include "comp_filter.hpp"
+#include "naive_filter.hpp"
 #include "csv_reader.hpp"
 #include "metrics.hpp"
 
