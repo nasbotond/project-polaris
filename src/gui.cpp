@@ -82,7 +82,7 @@ namespace GUI
     // tinyfiledialogs
     void* call_from_thread()
     {
-        selectedfolderPath = tinyfd_selectFolderDialog("Select Folder with data files in it", "");
+        selectedfolderPath = tinyfd_selectFolderDialog("Select directory with data files in it", "");
 
         // If the dialog is open and we try to open it again, stop the program until it is closed
         if (!selectedfolderPath)
@@ -396,7 +396,7 @@ namespace GUI
         {            
             ImGui::Begin("Menu");
 
-            if(ImGui::Button("Select Folder"))
+            if(ImGui::Button("Select directory"))
             {
                 selectedfolderPath = NULL;
                 fPath = "";
@@ -662,7 +662,7 @@ namespace GUI
 
                 if(has_ground_truth)
                 {
-                    ImGui::Text("RMSE Values (degrees): ");
+                    ImGui::Text("RMSE values (degrees): ");
                     if(ImGui::BeginTable("table1", 5))
                     {
                         ImGui::TableNextRow();

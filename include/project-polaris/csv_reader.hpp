@@ -126,18 +126,18 @@ class CsvReader
             int rows = 0;
             float sum_total_madg_mag = 0.0;
             float sum_total_madg_no_mag = 0.0;
-            float sum_total_comp_mag = 0.0;
-            float sum_total_comp_no_mag = 0.0;
+            float sum_total_naive_mag = 0.0;
+            float sum_total_naive_no_mag = 0.0;
 
             float sum_inc_madg_mag = 0.0;
             float sum_inc_madg_no_mag = 0.0;
-            float sum_inc_comp_mag = 0.0;
-            float sum_inc_comp_no_mag = 0.0;
+            float sum_inc_naive_mag = 0.0;
+            float sum_inc_naive_no_mag = 0.0;
 
             float sum_head_madg_mag = 0.0;
             float sum_head_madg_no_mag = 0.0;
-            float sum_head_comp_mag = 0.0;
-            float sum_head_comp_no_mag = 0.0;
+            float sum_head_naive_mag = 0.0;
+            float sum_head_naive_no_mag = 0.0;
 
             std::fstream afile(path + results_suffix + "/error_madg_mag.csv", std::ios::in);
             std::string aline;
@@ -157,7 +157,7 @@ class CsvReader
             }
             else
             {
-                throw std::runtime_error("Error: failed to open file");
+                throw std::runtime_error("Error: failed to open error_madg_mag file");
             }
 
             std::fstream wfile(path + results_suffix + "/error_madg_no_mag.csv", std::ios::in);
@@ -177,10 +177,10 @@ class CsvReader
             }
             else
             {
-                throw std::runtime_error("Error: failed to open file");
+                throw std::runtime_error("Error: failed to open error_madg_no_mag file");
             }
 
-            std::fstream mfile(path + results_suffix + "/error_comp_mag.csv", std::ios::in);
+            std::fstream mfile(path + results_suffix + "/error_naive_mag.csv", std::ios::in);
             std::string mline;
             if(mfile.is_open())
             {
@@ -189,18 +189,18 @@ class CsvReader
                     std::vector<float> m_split = split(mline, ',');
                     if(m_split.at(0) != 9999)
                     {
-                        sum_total_comp_mag += m_split.at(0)*m_split.at(0);
-                        sum_inc_comp_mag += m_split.at(1)*m_split.at(1);
-                        sum_head_comp_mag += m_split.at(2)*m_split.at(2);
+                        sum_total_naive_mag += m_split.at(0)*m_split.at(0);
+                        sum_inc_naive_mag += m_split.at(1)*m_split.at(1);
+                        sum_head_naive_mag += m_split.at(2)*m_split.at(2);
                     }
                 }
             }
             else
             {
-                throw std::runtime_error("Error: failed to open file");
+                throw std::runtime_error("Error: failed to open error_naive_mag file");
             }
 
-            std::fstream file(path + results_suffix + "/error_comp_no_mag.csv", std::ios::in);
+            std::fstream file(path + results_suffix + "/error_naive_no_mag.csv", std::ios::in);
             std::string line;
             if(file.is_open())
             {
@@ -209,21 +209,21 @@ class CsvReader
                     std::vector<float> gt_split = split(line, ',');
                     if(gt_split.at(0) != 9999)
                     {
-                        sum_total_comp_no_mag += gt_split.at(0)*gt_split.at(0);
-                        sum_inc_comp_no_mag += gt_split.at(1)*gt_split.at(1);
-                        sum_head_comp_no_mag += gt_split.at(2)*gt_split.at(2);
+                        sum_total_naive_no_mag += gt_split.at(0)*gt_split.at(0);
+                        sum_inc_naive_no_mag += gt_split.at(1)*gt_split.at(1);
+                        sum_head_naive_no_mag += gt_split.at(2)*gt_split.at(2);
                     }
                 }
             }
             else
             {
-                throw std::runtime_error("Error: failed to open file");
+                throw std::runtime_error("Error: failed to open error_naive_no_mag file");
             }
 
             result.at(0) = Vec3(sqrt(sum_total_madg_mag/rows), sqrt(sum_inc_madg_mag/rows), sqrt(sum_head_madg_mag/rows));
             result.at(1) = Vec3(sqrt(sum_total_madg_no_mag/rows), sqrt(sum_inc_madg_no_mag/rows), sqrt(sum_head_madg_no_mag/rows));
-            result.at(2) = Vec3(sqrt(sum_total_comp_mag/rows), sqrt(sum_inc_comp_mag/rows), sqrt(sum_head_comp_mag/rows));
-            result.at(3) = Vec3(sqrt(sum_total_comp_no_mag/rows), sqrt(sum_inc_comp_no_mag/rows), sqrt(sum_head_comp_no_mag/rows));
+            result.at(2) = Vec3(sqrt(sum_total_naive_mag/rows), sqrt(sum_inc_naive_mag/rows), sqrt(sum_head_naive_mag/rows));
+            result.at(3) = Vec3(sqrt(sum_total_naive_no_mag/rows), sqrt(sum_inc_naive_no_mag/rows), sqrt(sum_head_naive_no_mag/rows));
 
             std::ofstream rmse_out;
             rmse_out.open (path + results_suffix + "/rmse_out.csv");
