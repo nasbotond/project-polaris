@@ -104,15 +104,30 @@ void NaiveFilter::updateFilter(const Vec3 w, const Vec3 a)
     {
         acc.norm();
 
-        float theta = atan2(acc.y, acc.z); // roll
-        float phi = atan2(-acc.x, sqrt((acc.y*acc.y + acc.z*acc.z))); // pitch
+        // this is the best
+        float phi = atan2(acc.y, acc.z); // roll
+        float theta = atan2(-acc.x, sqrt((acc.y*acc.y + acc.z*acc.z))); // pitch
+
+        // float phi;
+        // float theta;
+        // float sin_p = a.x;
+        // if(abs(sin_p) >= 0.999)
+        // {
+        //     phi = std::copysign(M_PI/2, sin_p);
+        //     theta = 0;
+        // }
+        // else
+        // {
+        //     phi = atan2(-acc.y, acc.z); // roll
+        //     theta = atan2(acc.x, sqrt((acc.y*acc.y + acc.z*acc.z))); // pitch
+        // }
         
         float psi = 0; // yaw
 
-        q_am.q_1 = cos(0.5*theta)*cos(0.5*phi);
-        q_am.q_2 = sin(0.5*theta)*cos(0.5*phi);
-        q_am.q_3 = cos(0.5*theta)*sin(0.5*phi);
-        q_am.q_4 = -sin(0.5*theta)*sin(0.5*phi);
+        q_am.q_1 = cos(0.5*phi)*cos(0.5*theta);
+        q_am.q_2 = sin(0.5*phi)*cos(0.5*theta);
+        q_am.q_3 = cos(0.5*phi)*sin(0.5*theta);
+        q_am.q_4 = -sin(0.5*phi)*sin(0.5*theta);
 
         q_am.norm();
     }

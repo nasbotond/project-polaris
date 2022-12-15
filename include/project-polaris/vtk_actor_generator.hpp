@@ -30,8 +30,8 @@ static vtkSmartPointer<vtkActor> getArrowActor(std::vector<double> vector)
     // Generate a random start and end point
     double start_point[3] = {0, 0, 0};
     // double end_point[3] = {0.0, 0.0, 1.0};
-    float x = -sin(vector.at(1));
-    float y = cos(vector.at(1))*sin(vector.at(0));
+    float x = sin(vector.at(1));
+    float y = -cos(vector.at(1))*sin(vector.at(0));
     // Negate z to make arrow point down (towards the earth)
     float z = cos(vector.at(1))*cos(vector.at(0));
 
@@ -98,8 +98,10 @@ static vtkSmartPointer<vtkActor> getPlaneActor(std::vector<double> vector)
     // PLANE
     // Create a plane
     plane_source->SetOrigin(0.0, 0.0, 0.0);
-    plane_source->SetPoint1(0.5*cos(vector.at(1))*cos(vector.at(2)), 0.5*(cos(vector.at(2))*sin(vector.at(1))*sin(vector.at(0)) - cos(vector.at(0))*sin(vector.at(2))), 0.5*(cos(vector.at(0))*cos(vector.at(2))*sin(vector.at(1)) + sin(vector.at(0))*sin(vector.at(2))));
-    plane_source->SetPoint2(0.25*cos(vector.at(1))*sin(vector.at(2)), 0.25*(cos(vector.at(0))*cos(vector.at(2)) + sin(vector.at(1))*sin(vector.at(0))*sin(vector.at(2))), 0.25*(cos(vector.at(0))*sin(vector.at(1))*sin(vector.at(2)) - cos(vector.at(2))*sin(vector.at(0))));
+    // plane_source->SetPoint1(0.5*cos(vector.at(1))*cos(vector.at(2)), 0.5*(cos(vector.at(2))*sin(vector.at(1))*sin(vector.at(0)) - cos(vector.at(0))*sin(vector.at(2))), 0.5*(cos(vector.at(0))*cos(vector.at(2))*sin(vector.at(1)) + sin(vector.at(0))*sin(vector.at(2))));
+    // plane_source->SetPoint2(0.25*cos(vector.at(1))*sin(vector.at(2)), 0.25*(cos(vector.at(0))*cos(vector.at(2)) + sin(vector.at(1))*sin(vector.at(0))*sin(vector.at(2))), 0.25*(cos(vector.at(0))*sin(vector.at(1))*sin(vector.at(2)) - cos(vector.at(2))*sin(vector.at(0))));
+    plane_source->SetPoint1(0.5*cos(vector.at(1))*cos(vector.at(2)), 0.5*(cos(vector.at(0))*sin(vector.at(2)) + sin(vector.at(0))*sin(vector.at(1))*cos(vector.at(2))), 0.5*(sin(vector.at(0))*sin(vector.at(2)) - cos(vector.at(0))*sin(vector.at(1))*cos(vector.at(2))));
+    plane_source->SetPoint2(-0.25*cos(vector.at(1))*sin(vector.at(2)), 0.25*(cos(vector.at(0))*cos(vector.at(2)) - sin(vector.at(1))*sin(vector.at(0))*sin(vector.at(2))), 0.25*(cos(vector.at(2))*sin(vector.at(0)) + cos(vector.at(0))*sin(vector.at(1))*sin(vector.at(2))));
     plane_source->SetCenter(0.0, 0.0, 0.0);
 
     // float x = -sin(vector.at(1));
