@@ -227,7 +227,7 @@ namespace GUI
         Quaternion enu_naive_mag;
         Quaternion enu_naive;
 
-        for (int i = start_index; i < end_index; ++i)
+        for(int i = start_index; i < end_index; ++i)
         {
             naive_mag.updateFilter(w.at(i), a.at(i), m.at(i));
             naive.updateFilter(w.at(i), a.at(i));
@@ -278,9 +278,9 @@ namespace GUI
                 gravity_vectors_gt.push_back({gt.at(i).roll(), gt.at(i).pitch(), gt.at(i).yaw()});
             }
 
-            gravity_vectors_madg.push_back({enu_madg.roll(), enu_madg.pitch(), enu_madg.yaw()});
+            gravity_vectors_madg.push_back({enu_madg.roll(), enu_madg.pitch(), 0});// enu_madg.yaw()});
             gravity_vectors_madg_mag.push_back({enu_madg_mag.roll(), enu_madg_mag.pitch(), enu_madg_mag.yaw()});            
-            gravity_vectors_naive.push_back({enu_naive.roll(), enu_naive.pitch(), enu_naive.yaw()});
+            gravity_vectors_naive.push_back({enu_naive.roll(), enu_naive.pitch(), 0});// enu_naive.yaw()});
             gravity_vectors_naive_mag.push_back({enu_naive_mag.roll(), enu_naive_mag.pitch(), enu_naive_mag.yaw()});
         }
 
@@ -677,7 +677,7 @@ namespace GUI
                         ImGui::TableNextRow();
                         ImGui::TableSetColumnIndex(0);
                         ImGui::Text("Incl. error");
-                        for (int column = 1; column < 5; column++)
+                        for(int column = 1; column < 5; column++)
                         {
                             ImGui::TableSetColumnIndex(column);
                             ImGui::Text("%f", rmse.at(column-1).y*180/M_PI);
@@ -685,7 +685,7 @@ namespace GUI
                         ImGui::TableNextRow();
                         ImGui::TableSetColumnIndex(0);
                         ImGui::Text("Head. error");
-                        for (int column = 1; column < 5; column++)
+                        for(int column = 1; column < 5; column++)
                         {
                             ImGui::TableSetColumnIndex(column);
                             ImGui::Text("%f", rmse.at(column-1).z*180/M_PI);
@@ -693,7 +693,7 @@ namespace GUI
                         ImGui::TableNextRow();
                         ImGui::TableSetColumnIndex(0);
                         ImGui::Text("Total error");
-                        for (int column = 1; column < 5; column++)
+                        for(int column = 1; column < 5; column++)
                         {
                             ImGui::TableSetColumnIndex(column);
                             ImGui::Text("%f", rmse.at(column-1).x*180/M_PI);
